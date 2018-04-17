@@ -6,12 +6,16 @@ Why this
 ======
 As metioned above, this is not an orm library. If you are looking for some orm library in go, this is not suitable for you. If you like to write SQL statements, but you don't want to write SQL function again and again, then this tool will help you to reduce workload.
 
-## Install
+# Install
 ```shell
 go get -u anbillon.com/sqlbrick/cmd/sqlbrick
 ```
+Add the following to your dependency if you are working with `dep`
+```text
+anbillon.com/sqlbrick/typex
+```
 
-## Usage
+# Usage
 To use sqlbrick, put your SQL statements in `.sql` file. Typically the first statement creates a table. The statement will be a little different from standrad SQL statement, it uses `${}` as  placeholder. Here's an example:
 ```sql
 CREATE TABLE IF NOT EXISTS book (
@@ -54,7 +58,7 @@ import (
 )
 
 func main() {
-	db, err := sqlx.Connect("postgres", "user=foo dbname=bar sslmode=disable")
+	db, err := sqlx.Connect("postgres", "postgres://user:pass@localhost/dbname?sslmode=disable")
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -70,7 +74,6 @@ func main() {
 }
 ```
 The value in wildcards should keep the same with SQL field, or the same with your custom struct which tagged with `db`. For more detail, you can check the document of [sqlx][1]. 
-
 
 License
 ======

@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS book (
-  id  int NOT NULL PRIMARY KEY,
+  "id"  serial NOT NULL PRIMARY KEY,
   uid int NOT NULL,
   name text NOT NULL,
   content varchar(255),
@@ -8,7 +8,8 @@ CREATE TABLE IF NOT EXISTS book (
 );
 
 -- name: InsertOne
-INSERT INTO book (name, content, price) VALUES (${name}, ${content}, ${price});
+INSERT INTO book (uid, name, content, create_time, price)
+  VALUES (${uid}, ${name}, ${content}, ${create_time}, ${price});
 
 -- name: UpdatePrice
 UPDATE book SET price = ${price}, content = ${content} WHERE id = ${id};

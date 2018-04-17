@@ -1,4 +1,6 @@
 // Copyright (c) 2018-present Anbillon Team (anbillonteam@gmail.com).
+// This source code is licensed under the MIT license found in the
+// LICENSE file in the root directory of this source tree.
 
 package parser
 
@@ -12,6 +14,7 @@ var defaultDDLTag = map[string]string{
 
 var fieldTypes = map[string]string{
 	"bool":        "bool",
+	"boolean":     "bool",
 	"tinyint":     "int8",
 	"smallint":    "int16",
 	"integer":     "int32",
@@ -24,6 +27,7 @@ var fieldTypes = map[string]string{
 	"double":      "float64",
 	"real":        "float64",
 	"numeric":     "float64",
+	"decimal":     "float64",
 	"text":        "string",
 	"varchar":     "string",
 	"char":        "string",
@@ -36,9 +40,11 @@ var fieldTypes = map[string]string{
 	"uuid":        "string",
 	"json":        "string",
 	"xml":         "string",
+	"year":        "string",
 	"date":        "time.Time",
 	"datetime":    "time.Time",
 	"timestamp":   "time.Time",
+	"time":        "time.Time",
 	"binary":      "[]byte",
 	"varbinary":   "[]byte",
 	"tinyblob":    "[]byte",
@@ -50,6 +56,7 @@ var fieldTypes = map[string]string{
 
 var nullableFieldTypes = map[string]string{
 	"bool":        "sql.NullBool",
+	"boolean":     "sql.NullBool",
 	"tinyint":     "sql.NullInt64",
 	"smallint":    "sql.NullInt64",
 	"integer":     "sql.NullInt64",
@@ -62,6 +69,7 @@ var nullableFieldTypes = map[string]string{
 	"double":      "sql.NullFloat64",
 	"real":        "sql.NullFloat64",
 	"numeric":     "sql.NullFloat64",
+	"decimal":     "sql.NullFloat64",
 	"text":        "sql.NullString",
 	"varchar":     "sql.NullString",
 	"char":        "sql.NullString",
@@ -74,9 +82,11 @@ var nullableFieldTypes = map[string]string{
 	"uuid":        "sql.NullString",
 	"json":        "sql.NullString",
 	"xml":         "sql.NullString",
+	"year":        "sql.NullString",
 	"date":        "typex.NullTime",
 	"datetime":    "typex.NullTime",
 	"timestamp":   "typex.NullTime",
+	"time":        "typex.NullTime",
 	"binary":      "typex.NullBytes",
 	"varbinary":   "typex.NullBytes",
 	"tinyblob":    "typex.NullBytes",
