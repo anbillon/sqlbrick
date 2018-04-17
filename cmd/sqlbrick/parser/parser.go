@@ -1,4 +1,6 @@
 // Copyright (c) 2018-present Anbillon Team (anbillonteam@gmail.com).
+// This source code is licensed under the MIT license found in the
+// LICENSE file in the root directory of this source tree.
 
 package parser
 
@@ -39,7 +41,7 @@ func (p *Parser) getDDLTag(line string) (string, bool) {
 		return "", false
 	}
 
-	return defaultDDLTag[matches[1]], matches[1] == "CREATE"
+	return defaultDDLTag[matches[1]], strings.TrimSpace(matches[1]) == "CREATE"
 }
 
 func (p *Parser) getCURDTag(line string) string {
@@ -145,6 +147,18 @@ func (p *Parser) parseQueries() {
 	}
 }
 
+func (p *Parser) searchType(source []string) string {
+	var i int
+	for i = 1; i < len(source); i ++ {
+		typeKey := strings.ToLower(strings.TrimSpace(source[i]))
+		if len(typeKey) != 0 {
+			return typeKey
+		}
+	}
+
+	return ""
+}
+
 func (p *Parser) parseFields() {
 	if len(p.createDDLTag) == 0 {
 		return
@@ -153,7 +167,7 @@ func (p *Parser) parseFields() {
 	createDDL := p.statements[p.createDDLTag].Query
 	leftIndex := strings.Index(createDDL, "(")
 	rightIndex := strings.LastIndex(createDDL, ")")
-	if leftIndex < 0 || rightIndex < 0 || leftIndex >= rightIndex {
+	if leftIndex <= 0 || rightIndex <= 0 || leftIndex >= rightIndex {
 		log.Printf("ddl is not correct: %v", createDDL)
 		return
 	}
@@ -161,11 +175,11 @@ func (p *Parser) parseFields() {
 	for _, value := range fieldsSyntax {
 		definition := strings.Split(value, " ")
 		if definition == nil || len(definition) < 2 {
-			log.Printf("not correct defintion: %v", value)
+			log.Printf("invalid defintion: %v", value)
 			continue
 		}
 
-		typeKey := strings.ToLower(strings.Replace(definition[1], " ", "", -1))
+		typeKey := p.searchType(definition)
 		if len(typeKey) == 0 {
 			continue
 		}
@@ -197,7 +211,7 @@ func (p *Parser) parseFields() {
 			}
 		}
 
-		fieldName := strings.TrimSpace(definition[0])
+		fieldName := strings.Trim(strings.TrimSpace(definition[0]), `"`)
 
 		syntax := Syntax{
 			DbFieldName: fieldName,
