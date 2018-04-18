@@ -4,6 +4,18 @@ go:
   - "1.8"
   - "1.9"
   - "1.10.x"
-  - master
 
-script: go test ./typex ./cmd/sqlbrick
+before_install:
+  - curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
+  - mkdir -p $GOPATH/src/anbillon.com && cd .. && mv sqlbrick $GOPATH/src/anbillon.com/
+  - cd $GOPATH/src/anbillon.com/sqlbrick
+
+install:
+  - dep ensure -v
+
+script:
+  - go test ./...
+  - cd cmd/sqlbrick && go build && go install
+
+after_success:
+  - sqlbrick -help

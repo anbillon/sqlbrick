@@ -5,11 +5,7 @@
 package parser
 
 var defaultDDLTag = map[string]string{
-	"CREATE":   "CreateTable",
-	"ALTER":    "AlterTable",
-	"DROP":     "DropTable",
-	"TRUNCATE": "TruncateTable",
-	"RENAME":   "RenameTable",
+	"CREATE": "CreateTable",
 }
 
 var fieldTypes = map[string]string{
@@ -99,18 +95,33 @@ var nullableFieldTypes = map[string]string{
 type QueryType int8
 
 const (
-	QueryTypeInvalid QueryType = 0
-	QueryTypeInsert  QueryType = 1
-	QueryTypeDelete  QueryType = 2
-	QueryTypeUpdate  QueryType = 3
-	QueryTypeSelect  QueryType = 4
+	QueryTypeInvalid QueryType = iota
+	QueryTypeCreate
+	QueryTypeInsert
+	QueryTypeDelete
+	QueryTypeUpdate
+	QueryTypeSelect
 )
 
 var queryTypes = map[string]QueryType{
+	"CREATE": QueryTypeCreate,
 	"INSERT": QueryTypeInsert,
 	"DELETE": QueryTypeDelete,
 	"UPDATE": QueryTypeUpdate,
 	"SELECT": QueryTypeSelect,
+}
+
+type MapperType int8
+
+const (
+	MapperDefault MapperType = iota
+	MapperSingle
+	MapperArray
+)
+
+var mappers = map[string]MapperType{
+	"single": MapperSingle,
+	"array":  MapperArray,
 }
 
 type Syntax struct {
@@ -119,8 +130,27 @@ type Syntax struct {
 	FieldType   string
 }
 
+type Condition struct {
+	Expression string
+	Query      string
+}
+
+type DynamicQuery struct {
+	QueryType       QueryType
+	Conditions      []Condition
+	Segments        []string
+	Args            []string
+	RemoveLastComma bool
+}
+
+type Definition struct {
+	Name   string
+	Mapper MapperType
+	IsTx   bool
+}
+
 type Statement struct {
-	QueryType QueryType
-	Query     string
-	Args      []string
+	Definition *Definition
+	Queries    []DynamicQuery
+	Comment    string
 }

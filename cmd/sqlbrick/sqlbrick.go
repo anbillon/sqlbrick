@@ -24,15 +24,15 @@ func genFromSql(brickName string, sqlFilePath string,
 	p := parser.NewParser()
 	g := NewGenerator(outputDir, packageName)
 	g.header(sourceFilename)
-	keys, statements, syntaxes, err := p.LoadSqlFile(sqlFilePath)
+	statements, syntaxes, err := p.LoadSqlFile(sqlFilePath)
 	if err != nil {
-		log.Fatalf("error: parse sql file: %s", err)
+		log.Fatalf("parse sql file fail: %s", err)
 		return
 	}
 
 	g.GenerateBrick(sourceFilename, brickName, syntaxes)
-	for _, value := range keys {
-		g.Generate(brickName, value, statements[value])
+	for _, value := range statements {
+		g.Generate(brickName, value)
 	}
 
 	if err := g.Output(filename); err != nil {
@@ -52,7 +52,7 @@ func main() {
 	flag.StringVar(&packageName, "p", "models", "The package name of generated source code")
 	flag.Parse()
 
-	if outputDir == "" {
+	if len(outputDir) == 0 {
 		outputDir = filepath.Join(workDir, packageName)
 	}
 
