@@ -24,18 +24,18 @@ const (
 	sqlbrickTemplate = "sqlbrick.tpl"
 	brickTemplate    = "brick.tpl"
 	ddlTemplate      = "ddl.tpl"
-	insertTempalate  = "insert.tpl"
-	deleteTempalate  = "delete.tpl"
-	updateTempalate  = "update.tpl"
+	insertTemplate   = "insert.tpl"
+	deleteTemplate   = "delete.tpl"
+	updateTemplate   = "update.tpl"
 	selectTemplate   = "select.tpl"
 )
 
 var templates = map[parser.QueryType]string{
-	parser.QueryTypeInvalid: ddlTemplate,
-	parser.QueryTypeInsert:  insertTempalate,
-	parser.QueryTypeDelete:  deleteTempalate,
-	parser.QueryTypeUpdate:  updateTempalate,
-	parser.QueryTypeSelect:  selectTemplate,
+	parser.QueryTypeCreate: ddlTemplate,
+	parser.QueryTypeInsert: insertTemplate,
+	parser.QueryTypeDelete: deleteTemplate,
+	parser.QueryTypeUpdate: updateTemplate,
+	parser.QueryTypeSelect: selectTemplate,
 }
 
 // Type definition for sqlbrick generator.
@@ -48,12 +48,16 @@ type Generator struct {
 
 // Type definition for sql functions used to generate sql func.
 type SqlFunc struct {
-	BrickName string
-	FuncName  string
-	Query     string
-	ArgName   string
-	Args      []string
-	TotalArgs int
+	BrickName   string
+	FuncName    string
+	Segments    []string
+	Conditions  []parser.Condition
+	RemoveComma bool
+	Mapper      parser.MapperType
+	ArgName     string
+	Args        []string
+	TotalArgs   int
+	Comment     string
 }
 
 // NewGenerator create a new Generator with output dir and package name.
@@ -95,7 +99,9 @@ func (g *Generator) NewLine() {
 
 // applyTemplate will apply data into template
 func (g *Generator) applyTemplate(tplName string, data interface{}) error {
-	tpl, err := template.New("").Parse(g.box.String(tplName))
+	tplFuncMap := make(template.FuncMap)
+	tplFuncMap["Split"] = strings.Split
+	tpl, err := template.New("").Funcs(tplFuncMap).Parse(g.box.String(tplName))
 	if err != nil {
 		return err
 	}
@@ -129,25 +135,44 @@ func (g *Generator) GenerateBrick(sourceFilename string, brick string, syntaxes 
 }
 
 // Generate will add func into the generator buffer.
-func (g *Generator) Generate(brickName string, funcName string,
-	statement parser.Statement) {
-	tpl, found := templates[statement.QueryType]
+func (g *Generator) Generate(brickName string, statement parser.Statement) {
+	if statement.Definition.IsTx {
+		g.genTxBrick(brickName, statement)
+	} else {
+		g.genSingleBrick(brickName, statement)
+	}
+}
+
+func (g *Generator) genTxBrick(brickName string, statement parser.Statement) {
+	// TODO: generate transaction
+}
+
+func (g *Generator) genSingleBrick(brickName string, statement parser.Statement) {
+	dynamicQuery := statement.Queries[0]
+	definition := statement.Definition
+	queryType := dynamicQuery.QueryType
+	tpl, found := templates[queryType]
 	if !found {
-		log.Printf("no template found for given query: %v", statement.Query)
+		log.Printf("no template found for given query:\n %v", dynamicQuery.Segments)
 		return
 	}
 	var argName = "args"
-	argsLen := statement.Args
+	argsLen := dynamicQuery.Args
 	if len(argsLen) == 1 {
-		argName = statement.Args[0]
+		argName = dynamicQuery.Args[0]
 	}
 
 	if err := g.applyTemplate(tpl, SqlFunc{
-		BrickName: brickName,
-		FuncName:  funcName,
-		Query:     statement.Query,
-		ArgName:   argName,
-		TotalArgs: len(statement.Args),
+		BrickName:   brickName,
+		FuncName:    definition.Name,
+		Segments:    dynamicQuery.Segments,
+		Conditions:  dynamicQuery.Conditions,
+		RemoveComma: dynamicQuery.RemoveLastComma,
+		Mapper:      definition.Mapper,
+		Args:        dynamicQuery.Args,
+		ArgName:     argName,
+		TotalArgs:   len(dynamicQuery.Args),
+		Comment:     statement.Comment,
 	}); err != nil {
 		log.Printf("error: %v", err)
 	}
