@@ -8,7 +8,7 @@ func (b *{{ .BrickName }}Brick){{ .FuncName }}({{ .ArgName }} interface{}) (sql.
 
     // create map arguments for sqlx
     args := map[string]interface{}{
-        {{ range $k, $v := .Args }}"{{ $v }}": {{ $v }},{{ end }}
+        {{ range $k, $v := .Args }}{{ $mk := ToSnake $v }}"{{ $mk }}": {{ $v }},{{ end }}
     }
 
     return stmt.Exec(args)
