@@ -117,7 +117,7 @@ func (p *Parser) parseFields(block string) error {
 	leftIndex := strings.Index(block, "(")
 	rightIndex := strings.LastIndex(block, ")")
 	if leftIndex <= 0 || rightIndex <= 0 || leftIndex >= rightIndex {
-		return errors.Errorf("create ddl is not correct: %v", block)
+		return errors.Errorf("create ddl is not correct: \n%v", block)
 	}
 
 	fieldsSyntax := strings.Split(block[leftIndex+1:rightIndex], ",")
@@ -183,7 +183,7 @@ func (p *Parser) parseComment() string {
 }
 
 // parseDynamicQueries will parse definition for sql statement
-func (p *Parser) parseDefinition(index int) (*Definition, error) {
+func (p *Parser) parseDefinition() (*Definition, error) {
 	nameRegex := regexp.MustCompile(`name (.*)`)
 	mapperRegex := regexp.MustCompile(`mapper (.*)`)
 	txRegex := regexp.MustCompile(`tx`)
@@ -202,7 +202,9 @@ func (p *Parser) parseDefinition(index int) (*Definition, error) {
 		strings.Replace(p.currentBlock, headMatches[0], "", 1))
 	p.currentBlock = strings.TrimSpace(
 		strings.Replace(p.currentBlock, tailMatches[0], "", 1))
-	tags := strings.Split(strings.TrimSpace(headMatches[1]), ",")
+	definitionHead := strings.TrimSpace(headMatches[1])
+	left := definitionHead
+	tags := strings.Split(definitionHead, ",")
 	for _, value := range tags {
 		nm := nameRegex.FindStringSubmatch(value)
 		mm := mapperRegex.FindStringSubmatch(value)
@@ -211,14 +213,24 @@ func (p *Parser) parseDefinition(index int) (*Definition, error) {
 			return nil, errors.Errorf("definition format error:\n%v ", block)
 		}
 		if nm != nil && len(nm) >= 2 {
+			left = strings.Replace(left, value, "", 1)
 			definition.Name = strings.TrimSpace(nm[1])
 		}
 		if mm != nil && len(mm) >= 2 {
+			left = strings.Replace(left, value, "", 1)
 			definition.Mapper = mappers[strings.TrimSpace(mm[1])]
+			if definition.Mapper == MapperDefault {
+				return nil, errors.Errorf("error mapper type %v\n", block)
+			}
 		}
-		if tm != nil && len(tm) >= 2 {
+		if tm != nil && len(tm) >= 1 {
+			left = strings.Replace(left, value, "", 1)
 			definition.IsTx = true
 		}
+	}
+
+	if len(strings.TrimSpace(strings.Replace(left, ",", "", -1))) != 0 {
+		return nil, errors.Errorf("definition format error:\n%v ", block)
 	}
 
 	if len(definition.Name) == 0 {
@@ -255,9 +267,13 @@ func (p *Parser) parsePlaceholder(block string) ([]string, string, error) {
 }
 
 func (p *Parser) convertExpression(expression string, fieldName string) string {
+	if len(fieldName) == 0 {
+		return expression
+	}
+
 	var fieldType string
 	for _, v := range p.syntaxes {
-		if strings.ToUpper(v.FieldName) == strings.ToUpper(fieldName) {
+		if strings.ToUpper(v.FieldName) == strings.ToUpper(strcase.ToCamel(fieldName)) {
 			fieldType = v.FieldType
 			break
 		}
@@ -311,12 +327,25 @@ func (p *Parser) parseDynamicQuery(statement string) (*DynamicQuery, error) {
 	// TODO: add select support
 	if queryType != QueryTypeUpdate {
 		return nil, errors.Errorf(
-			"condition statement only support update now %v", statement)
+			"condition statement only support update now:\n%v", statement)
 	}
 
 	var conditions []Condition
 	for index, value := range matches {
 		query := value[0]
+		// append next condition or not when generate souce code
+		appendNext := false
+
+		// to check if next was condition or segment
+		i := strings.Index(consumedQuery, query)
+		if i >= 0 {
+			left := strings.TrimSpace(consumedQuery[i+len(query):])
+			lm := headRegexp.FindStringSubmatch(left)
+			if lm != nil && len(lm) >= 2 && strings.HasPrefix(left, lm[0]) {
+				appendNext = true
+			}
+		}
+
 		// remove condition head and end
 		query = headRegexp.ReplaceAllString(query, "")
 		query = strings.TrimSpace(endRegexp.ReplaceAllString(query, ""))
@@ -324,8 +353,8 @@ func (p *Parser) parseDynamicQuery(statement string) (*DynamicQuery, error) {
 			return nil, errors.Errorf("invalid statement, missing comma: %v", query)
 		}
 
-		m := headRegexp.FindStringSubmatch(value[0])
-		if m == nil || len(m) != 3 {
+		hm := headRegexp.FindStringSubmatch(value[0])
+		if hm == nil || len(hm) != 3 {
 			return nil, errors.Errorf("invalid condition: %v", statement)
 		}
 
@@ -335,28 +364,44 @@ func (p *Parser) parseDynamicQuery(statement string) (*DynamicQuery, error) {
 		}
 		fieldName := fm[1]
 		conditions = append(conditions, Condition{
-			Expression: p.convertExpression(m[2], fieldName),
+			Expression: p.convertExpression(hm[2], fieldName),
 			Query:      query,
+			AppendNext: appendNext,
 		})
 	}
 
 	segments := splitRegexp.Split(consumedQuery, -1)
+	var realSegments []string
 	var removeLastComma bool
-	for k, v := range segments {
+	var indexOfWhere int
+	var spaceNumber int
+	for index, v := range segments {
 		segment := strings.Replace(strings.TrimSpace(v), "\n", " ", -1)
-		segments[k] = segment
+		if len(segment) == 0 {
+			spaceNumber += 1
+			continue
+		}
+		realSegments = append(realSegments, segment)
+		if strings.Contains(segment, "WHERE") {
+			indexOfWhere = index - spaceNumber
+			// to avoid previous 'WHERE' prefix check
+			if removeLastComma {
+				removeLastComma = false
+			}
+		}
 		if strings.HasPrefix(segment, "WHERE") {
 			removeLastComma = true
 		}
 	}
-	if len(conditions) > len(segments) {
+	if len(conditions) < len(realSegments)-1 {
 		return nil, errors.Errorf("invalid condition: %v", statement)
 	}
 
 	dynamicQuery.QueryType = queryType
 	dynamicQuery.Args = args
 	dynamicQuery.Conditions = conditions
-	dynamicQuery.Segments = segments
+	dynamicQuery.Segments = realSegments
+	dynamicQuery.IndexOfWhere = indexOfWhere
 	dynamicQuery.RemoveLastComma = removeLastComma
 
 	return dynamicQuery, nil
@@ -413,10 +458,10 @@ func (p *Parser) parseSqlBlocks() error {
 		return err
 	}
 
-	for index, block := range p.sqlBlocks {
+	for _, block := range p.sqlBlocks {
 		p.currentBlock = block
 		comment := p.parseComment()
-		definition, err := p.parseDefinition(index)
+		definition, err := p.parseDefinition()
 		if err != nil {
 			return err
 		}

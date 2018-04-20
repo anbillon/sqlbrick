@@ -14,12 +14,14 @@ INSERT INTO book (uid, name, content, create_time, price)
   VALUES (${uid}, ${name}, ${content}, ${create_time}, ${price});
 {end define}
 
--- An example to show update price.
-{define name UpdatePrice}
+-- An example to show update.
+{define name UpdateSomeThing}
 UPDATE book SET
 {if price > 0} price = ${price}, {end if}
 {if content != ""} content = ${content}, {end if}
-name = ${name} WHERE id = ${id};
+name = ${name},
+{if create_time.Unix() != 0} create_time = ${create_time} {end if}
+WHERE id = ${id};
 {end define}
 
 -- An example to show complex update.
@@ -31,6 +33,10 @@ UPDATE book SET price=(SELECT price FROM book, user WHERE book.uid=user.id)
 
 {define name SelectAll}
 SELECT * FROM book;
+{end define}
+
+{define name CountBooks, mapper basicType}
+SELECT COUNT(*) FROM book WHERE uid = ${uid};
 {end define}
 
 -- An example to show SelectById.

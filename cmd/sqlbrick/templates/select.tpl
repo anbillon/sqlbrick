@@ -13,11 +13,16 @@ func (b *{{ .BrickName }}Brick){{ .FuncName }}(dest interface{}, {{ .ArgName }} 
     {{ if eq .Mapper 1 }}
     row := stmt.QueryRowx(args)
     if row.Err() != nil {
+        return row.Err()
+    }
+
+    return row.Scan(dest) {{ else if eq .Mapper 2 }}
+    row := stmt.QueryRowx(args)
+    if row.Err() != nil {
     	return row.Err()
     }
 
-    return row.StructScan(dest)
-    {{ else }}
+    return row.StructScan(dest) {{ else }}
     rows, err := stmt.Queryx(args)
     if err != nil {
         return err

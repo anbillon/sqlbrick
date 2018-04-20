@@ -70,6 +70,34 @@ func TestParserMatchDefineTail(t *testing.T) {
 	}
 }
 
+func TestParseDefinition(t *testing.T) {
+	tests := []string{
+		`{define name Create}
+			CREATE TABLE book
+		{end define}`,
+		`{define name Select, mapper}
+			SELECT * FROM book;
+		{end define}`,
+		`{define name Select, basicType}
+			SELECT * FROM book;
+		{end define}`,
+		`{define Select, basicType}
+			SELECT * FROM book;
+		{end define}`,
+		"This is non sense",
+	}
+
+	for k, v := range tests {
+		parser.currentBlock = v
+		_, err := parser.parseDefinition()
+		if k == 0 {
+			assert.NoError(t, err)
+		} else {
+			assert.Error(t, err)
+		}
+	}
+}
+
 func TestParserParseComment(t *testing.T) {
 	tests := []string{
 		`-- This is a comment example.`,
