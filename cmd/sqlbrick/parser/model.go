@@ -4,10 +4,6 @@
 
 package parser
 
-var defaultDDLTag = map[string]string{
-	"CREATE": "CreateTable",
-}
-
 var fieldTypes = map[string]string{
 	"bool":        "bool",
 	"boolean":     "bool",
@@ -114,14 +110,16 @@ var queryTypes = map[string]QueryType{
 type MapperType int8
 
 const (
-	MapperDefault MapperType = iota
+	MapperDefault   MapperType = iota
+	MapperBasicType
 	MapperSingle
 	MapperArray
 )
 
 var mappers = map[string]MapperType{
-	"single": MapperSingle,
-	"array":  MapperArray,
+	"basicType": MapperBasicType,
+	"single":    MapperSingle,
+	"array":     MapperArray,
 }
 
 type Syntax struct {
@@ -133,6 +131,7 @@ type Syntax struct {
 type Condition struct {
 	Expression string
 	Query      string
+	AppendNext bool
 }
 
 type DynamicQuery struct {
@@ -140,6 +139,7 @@ type DynamicQuery struct {
 	Conditions      []Condition
 	Segments        []string
 	Args            []string
+	IndexOfWhere    int
 	RemoveLastComma bool
 }
 

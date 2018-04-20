@@ -10,7 +10,8 @@ import (
 // This can be used as a model in database operation.
 type {{ .BrickName }} struct {
     {{ range $k, $v := .Syntaxes }}
-    {{ $v.FieldName }} {{ $v.FieldType }}   `db:"{{ $v.DbFieldName }}"`{{ end }}
+    {{ $v.FieldName }} {{ $v.FieldType }}   `db:"{{ $v.DbFieldName }}"`
+    {{- end }}
 }
 
 // Type definition for {{ .BrickName }}Brick. This brick will contains all database

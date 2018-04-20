@@ -121,7 +121,7 @@ SQLBrick uses `{define ...}...{end define}` to define a SQL function:
 ```
 Definition has two parameters, `name` and `mapper`, and must be splited by `,`. 
 * The `name` is necessarry to define the name of current SQL function.
-*  The `mapper` is optional, default is `array` which means the result will map to an array. If you want to map to only one result, then use `single`.
+*  The `mapper` is optional, default is `array` which means the result will map to an array. If you want to map to only one result, then use `single`. If you want to map to basic type, then use `basicType`(ps: this should be based on your query result).
 ### Condition
 SQLBrick uses `{if ...}...{end if}` as condition to make dynamic queries.
 

@@ -47,6 +47,13 @@ func main() {
 		log.Printf("select by id: %v", book)
 	}
 
+	var count int
+	if err := sqlBrick.Book.CountBooks(&count, 1324); err != nil {
+		log.Printf("wrror: %v", err)
+	} else {
+		log.Printf("select count: %v", count)
+	}
+
 	var booksx []models.Book
 	if err := sqlBrick.Book.SelectByUid(&booksx, 1324); err != nil {
 		log.Printf("wrong: %v", err)
@@ -58,7 +65,7 @@ func main() {
 		log.Printf("wrong: %v", err)
 	}
 
-	if _, err := sqlBrick.Book.UpdatePrice(&models.Book{
+	if _, err := sqlBrick.Book.UpdateSomeThing(&models.Book{
 		Id:         30,
 		Uid:        1324,
 		Name:       "Sqlbrick",

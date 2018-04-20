@@ -49,16 +49,17 @@ type Generator struct {
 
 // Type definition for sql functions used to generate sql func.
 type SqlFunc struct {
-	BrickName   string
-	FuncName    string
-	Segments    []string
-	Conditions  []parser.Condition
-	RemoveComma bool
-	Mapper      parser.MapperType
-	ArgName     string
-	Args        []string
-	TotalArgs   int
-	Comment     string
+	BrickName    string
+	FuncName     string
+	Segments     []string
+	Conditions   []parser.Condition
+	RemoveComma  bool
+	IndexOfWhere int
+	Mapper       parser.MapperType
+	ArgName      string
+	Args         []string
+	TotalArgs    int
+	Comment      string
 }
 
 // NewGenerator create a new Generator with output dir and package name.
@@ -101,7 +102,19 @@ func (g *Generator) NewLine() {
 // applyTemplate will apply data into template
 func (g *Generator) applyTemplate(tplName string, data interface{}) error {
 	tplFuncMap := make(template.FuncMap)
+	cache := make(map[string]interface{})
 	tplFuncMap["ToSnake"] = strcase.ToSnake
+	tplFuncMap["Contains"] = strings.Contains
+	tplFuncMap["Add"] = func(a, b int) int {
+		return a + b
+	}
+	tplFuncMap["CacheSet"] = func(key string, value interface{}) string {
+		cache[key] = value
+		return ""
+	}
+	tplFuncMap["CacheGet"] = func(key string) interface{} {
+		return cache[key]
+	}
 	tpl, err := template.New("").Funcs(tplFuncMap).Parse(g.box.String(tplName))
 	if err != nil {
 		return err
@@ -164,16 +177,17 @@ func (g *Generator) genSingleBrick(brickName string, statement parser.Statement)
 	}
 
 	if err := g.applyTemplate(tpl, SqlFunc{
-		BrickName:   brickName,
-		FuncName:    definition.Name,
-		Segments:    dynamicQuery.Segments,
-		Conditions:  dynamicQuery.Conditions,
-		RemoveComma: dynamicQuery.RemoveLastComma,
-		Mapper:      definition.Mapper,
-		Args:        dynamicQuery.Args,
-		ArgName:     argName,
-		TotalArgs:   len(dynamicQuery.Args),
-		Comment:     statement.Comment,
+		BrickName:    brickName,
+		FuncName:     definition.Name,
+		Segments:     dynamicQuery.Segments,
+		Conditions:   dynamicQuery.Conditions,
+		IndexOfWhere: dynamicQuery.IndexOfWhere,
+		RemoveComma:  dynamicQuery.RemoveLastComma,
+		Mapper:       definition.Mapper,
+		Args:         dynamicQuery.Args,
+		ArgName:      argName,
+		TotalArgs:    len(dynamicQuery.Args),
+		Comment:      statement.Comment,
 	}); err != nil {
 		log.Printf("error: %v", err)
 	}
