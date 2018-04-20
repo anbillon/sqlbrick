@@ -18,6 +18,7 @@ import (
 	"anbillon.com/sqlbrick/cmd/sqlbrick/parser"
 	"github.com/gobuffalo/packr"
 	"golang.org/x/tools/imports"
+	"github.com/iancoleman/strcase"
 )
 
 const (
@@ -100,7 +101,7 @@ func (g *Generator) NewLine() {
 // applyTemplate will apply data into template
 func (g *Generator) applyTemplate(tplName string, data interface{}) error {
 	tplFuncMap := make(template.FuncMap)
-	tplFuncMap["Split"] = strings.Split
+	tplFuncMap["ToSnake"] = strcase.ToSnake
 	tpl, err := template.New("").Funcs(tplFuncMap).Parse(g.box.String(tplName))
 	if err != nil {
 		return err
