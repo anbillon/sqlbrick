@@ -13,12 +13,18 @@ As metioned above, this is not an orm library. If you are looking for some orm l
 go get -u anbillon.com/sqlbrick/cmd/sqlbrick
 ```
 Add the following to your dependency if you are working with `dep`
-```text
-anbillon.com/sqlbrick/typex
+```toml
+required = [
+  "anbillon.com/sqlbrick/typex",
+]
+
+[[constraint]]
+  branch = "develop"
+  name = "anbillon.com/sqlbrick"
 ```
 
 # Usage
-To use sqlbrick, put your SQL statements in `.sql` file. Typically the first statement creates a table. The statement will be a little different from standard SQL statement, it uses `{}` as some simple syntax and `${}` as  placeholder. Other syntax in standard SQL can be used as usual such as comment  `--`. Here's an example:
+To use sqlbrick, put your SQL statements in `.sql` file. Typically the first statement creates a table. Each SQL file can include only one `CREATE TABLE`. The statement will be a little different from standard SQL statement, it uses `{}` as some simple syntax and `${}` as  placeholder. Other syntax in standard SQL can be used as usual such as comment  `--`. Here's an example:
 
 ```sql
 {define name CreateBook}
@@ -67,6 +73,15 @@ SELECT * FROM book WHERE uid = ${uid} ORDER BY name ASC;
 
 -- An example to show DeleteById.
 {define name DeleteById}
+DELETE FROM book WHERE id = ${id};
+{end define}
+
+{define name TxInsert, tx true}
+INSERT INTO book (uid, name, content, create_time, price)
+  VALUES (${uid}, ${name}, ${content}, ${create_time}, ${price});
+{end define}
+
+{define name TxDeleteById, tx true}
 DELETE FROM book WHERE id = ${id};
 {end define}
 ```
@@ -119,9 +134,23 @@ SQLBrick uses `{define ...}...{end define}` to define a SQL function:
 ....
 {end define}
 ```
-Definition has two parameters, `name` and `mapper`, and must be splited by `,`. 
-* The `name` is necessarry to define the name of current SQL function.
-*  The `mapper` is optional, default is `array` which means the result will map to an array. If you want to map to only one result, then use `single`. If you want to map to basic type, then use `basicType`(ps: this should be based on your query result).
+Definition has there parameters, `name`,  `mapper` and `tx`, they must be split by `,`. 
+* The `name` is necessary to define the name of current SQL function.
+* The `mapper` is optional, default is `array` which means the result will map to an array. If you want to map to only one result, then use `single`. If you want to map to basic type, then use `basicType`(ps: this should be based on your query result).
+* The `tx` is optional, default is `false`. If set `true`, the SQL function will work in a transaction. Consuming the generated code like this:
+```go
+...
+if tx, err := sqlBrick.Begin(); err != nil {
+	// your code here
+} else {
+	tx.Book.SomeTxFunc()
+	tx.Book.AnotherTxFunc()
+	tx.Commit()
+}
+...
+```
+For detail usage,  check the `examples` in source code.
+
 ### Condition
 SQLBrick uses `{if ...}...{end if}` as condition to make dynamic queries.
 

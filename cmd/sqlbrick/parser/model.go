@@ -151,6 +151,6 @@ type Definition struct {
 
 type Statement struct {
 	Definition *Definition
-	Queries    []DynamicQuery
+	Query      *DynamicQuery
 	Comment    string
 }

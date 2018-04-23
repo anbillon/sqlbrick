@@ -186,7 +186,7 @@ func (p *Parser) parseComment() string {
 func (p *Parser) parseDefinition() (*Definition, error) {
 	nameRegex := regexp.MustCompile(`name (.*)`)
 	mapperRegex := regexp.MustCompile(`mapper (.*)`)
-	txRegex := regexp.MustCompile(`tx`)
+	txRegex := regexp.MustCompile(`tx (true|false)`)
 	var definition Definition
 	block := p.currentBlock
 
@@ -299,7 +299,8 @@ func (p *Parser) convertExpression(expression string, fieldName string) string {
 		strcase.ToCamel(fieldName)+extra, -1)
 }
 
-func (p *Parser) parseDynamicQuery(statement string) (*DynamicQuery, error) {
+func (p *Parser) parseDynamicQuery() (*DynamicQuery, error) {
+	statement := strings.Replace(p.currentBlock, ";", "", -1)
 	var dynamicQuery = new(DynamicQuery)
 	splitRegexp := regexp.MustCompile(`({\s*if (.*?)})[\s\S]*?({\s*end \s*if\s*})`)
 	headRegexp := regexp.MustCompile(`({\s*if (.*?)})`)
@@ -407,23 +408,6 @@ func (p *Parser) parseDynamicQuery(statement string) (*DynamicQuery, error) {
 	return dynamicQuery, nil
 }
 
-// parseDynamicQueries will parse all dynamic queries in the sql statement
-func (p *Parser) parseDynamicQueries() ([]DynamicQuery, error) {
-	var dymamicQueries []DynamicQuery
-
-	statements := strings.Split(p.currentBlock, ";")
-	for _, value := range statements {
-		dq, err := p.parseDynamicQuery(value)
-		if err != nil {
-			return nil, err
-		}
-
-		dymamicQueries = append(dymamicQueries, *dq)
-	}
-
-	return dymamicQueries, nil
-}
-
 // parseQueriesType will parse all query type in parsed queries
 func (p *Parser) parseQueryType(block string) QueryType {
 	q := strings.Split(block, " ")
@@ -465,14 +449,14 @@ func (p *Parser) parseSqlBlocks() error {
 		if err != nil {
 			return err
 		}
-		dymanicQueries, err := p.parseDynamicQueries()
+		dymanicQuery, err := p.parseDynamicQuery()
 		if err != nil {
 			return err
 		}
 
 		p.definitions = append(p.definitions, Statement{
 			Definition: definition,
-			Queries:    dymanicQueries,
+			Query:      dymanicQuery,
 			Comment:    comment,
 		})
 	}

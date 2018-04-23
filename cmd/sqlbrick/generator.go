@@ -17,8 +17,8 @@ import (
 
 	"anbillon.com/sqlbrick/cmd/sqlbrick/parser"
 	"github.com/gobuffalo/packr"
-	"golang.org/x/tools/imports"
 	"github.com/iancoleman/strcase"
+	"golang.org/x/tools/imports"
 )
 
 const (
@@ -56,6 +56,7 @@ type SqlFunc struct {
 	RemoveComma  bool
 	IndexOfWhere int
 	Mapper       parser.MapperType
+	IsTx         bool
 	ArgName      string
 	Args         []string
 	TotalArgs    int
@@ -104,7 +105,6 @@ func (g *Generator) applyTemplate(tplName string, data interface{}) error {
 	tplFuncMap := make(template.FuncMap)
 	cache := make(map[string]interface{})
 	tplFuncMap["ToSnake"] = strcase.ToSnake
-	tplFuncMap["Contains"] = strings.Contains
 	tplFuncMap["Add"] = func(a, b int) int {
 		return a + b
 	}
@@ -123,25 +123,44 @@ func (g *Generator) applyTemplate(tplName string, data interface{}) error {
 }
 
 // GenerateSqlBrick will add sql brick definition into the generator buffer.
-func (g *Generator) GenerateSqlBrick(bricks []string) {
+func (g *Generator) GenerateSqlBrick(bricks []string, txMap map[string]bool) {
 	if err := g.applyTemplate(sqlbrickTemplate, struct {
 		Bricks []string
+		TxMap  map[string]bool
 	}{
 		Bricks: bricks,
+		TxMap:  txMap,
 	}); err != nil {
 		log.Printf("error: %v", err)
 	}
 }
 
+// CheckTx check if given statements has transaction.
+func (g *Generator) CheckTx(statements []parser.Statement) bool {
+	var hasTxStatement bool
+	for _, v := range statements {
+		if v.Definition.IsTx {
+			hasTxStatement = true
+			break
+		}
+	}
+	return hasTxStatement
+}
+
 // GenerateBrick will add brick definition into the generator buffer.
-func (g *Generator) GenerateBrick(sourceFilename string, brick string, syntaxes []parser.Syntax) {
+func (g *Generator) GenerateBrick(sourceFilename string, brick string,
+	syntaxes []parser.Syntax, statements []parser.Statement) {
+	hasTxStatement := g.CheckTx(statements)
+
 	if err := g.applyTemplate(brickTemplate, struct {
 		SourceFilename string
 		BrickName      string
+		HasTx          bool
 		Syntaxes       []parser.Syntax
 	}{
 		SourceFilename: sourceFilename,
 		BrickName:      brick,
+		HasTx:          hasTxStatement,
 		Syntaxes:       syntaxes,
 	}); err != nil {
 		log.Printf("error: %v", err)
@@ -150,19 +169,7 @@ func (g *Generator) GenerateBrick(sourceFilename string, brick string, syntaxes 
 
 // Generate will add func into the generator buffer.
 func (g *Generator) Generate(brickName string, statement parser.Statement) {
-	if statement.Definition.IsTx {
-		g.genTxBrick(brickName, statement)
-	} else {
-		g.genSingleBrick(brickName, statement)
-	}
-}
-
-func (g *Generator) genTxBrick(brickName string, statement parser.Statement) {
-	// TODO: generate transaction
-}
-
-func (g *Generator) genSingleBrick(brickName string, statement parser.Statement) {
-	dynamicQuery := statement.Queries[0]
+	dynamicQuery := statement.Query
 	definition := statement.Definition
 	queryType := dynamicQuery.QueryType
 	tpl, found := templates[queryType]
@@ -184,6 +191,7 @@ func (g *Generator) genSingleBrick(brickName string, statement parser.Statement)
 		IndexOfWhere: dynamicQuery.IndexOfWhere,
 		RemoveComma:  dynamicQuery.RemoveLastComma,
 		Mapper:       definition.Mapper,
+		IsTx:         definition.IsTx,
 		Args:         dynamicQuery.Args,
 		ArgName:      argName,
 		TotalArgs:    len(dynamicQuery.Args),
