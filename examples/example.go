@@ -74,4 +74,34 @@ func main() {
 	}); err != nil {
 		log.Printf("wrong: %v", err)
 	}
+
+	var txCount int
+	if tx, err := sqlBrick.Begin(); err != nil {
+		log.Printf("wrong: %v", err)
+	} else {
+		if _, err = tx.Book.TxInsert(&models.Book{
+			Uid:        1234,
+			Name:       "Tx",
+			Content:    sql.NullString{String: "Tx Test", Valid: true},
+			CreateTime: typex.NullTime{Time: time.Now(), Valid: true},
+			Price:      30,
+		}); err != nil {
+			log.Printf("wrong: %v", err)
+			return
+		}
+		if err := tx.Book.TxSelect(&txCount, 1234); err != nil {
+			log.Printf("wrong: %v", err)
+			return
+		}
+		var errTx = models.User{}
+		if _, err := tx.Book.TxDeleteById(errTx); err != nil {
+			log.Printf("wrong and rollback: %v", err)
+			return
+		}
+		if err := tx.Commit(); err != nil {
+			log.Printf("wrong: %v", err)
+		} else {
+			log.Printf("result: %v", txCount)
+		}
+	}
 }

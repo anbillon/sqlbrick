@@ -52,3 +52,23 @@ SELECT * FROM book WHERE uid = ${uid} ORDER BY name ASC;
 {define name DeleteById}
 DELETE FROM book WHERE id = ${id};
 {end define}
+
+{define name TxInsert, tx true}
+INSERT INTO book (uid, name, content, create_time, price)
+  VALUES (${uid}, ${name}, ${content}, ${create_time}, ${price});
+{end define}
+
+{define name TxSelect, mapper basicType, tx true}
+SELECT COUNT(*) FROM book WHERE uid = ${uid};
+{end define}
+
+{define name TxDeleteById, tx true}
+DELETE FROM book WHERE id = ${id};
+{end define}
+
+{define name TxUpdate, tx true}
+UPDATE book SET
+{if price > 0} price = ${price}, {end if}
+{if content != ""} content = ${content}, {end if}
+name = ${name} WHERE id = ${id};
+{end define}
