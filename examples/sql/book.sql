@@ -1,7 +1,7 @@
 {define name CreateBook}
 CREATE TABLE IF NOT EXISTS book (
   "id"  serial NOT NULL PRIMARY KEY,
-  uid int NOT NULL,
+  uid int4 NOT NULL,
   name text NOT NULL,
   content varchar(255),
   create_time TIMESTAMP,

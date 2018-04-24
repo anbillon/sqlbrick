@@ -37,8 +37,7 @@ func newUserBrick(db *sqlx.DB) *UserBrick {
 	return &UserBrick{db: db}
 }
 
-// Begin will start a new transaction for User brick. If any query
-// is defined as tx sql, this must be invoked.
+// newUserTx will create a new transaction for User.
 func (b *UserBrick) newUserTx(tx *sqlx.Tx) *UserBrickTx {
 	return &UserBrickTx{tx: tx}
 }

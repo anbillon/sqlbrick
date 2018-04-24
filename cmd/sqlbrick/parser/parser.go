@@ -94,7 +94,7 @@ func (p *Parser) matchDefineTail(line string) ([]string, bool) {
 }
 
 func (p *Parser) searchFieldAndType(source []string) (string, string) {
-	reg := regexp.MustCompile(`\(|\)|"|[0-9]`)
+	reg := regexp.MustCompile(`\([0-9]*\)|"`)
 	fieldName := ""
 	for i := 0; i < len(source); i++ {
 		input := strings.ToLower(strings.TrimSpace(source[i]))
@@ -281,13 +281,13 @@ func (p *Parser) convertExpression(expression string, fieldName string) string {
 
 	var extra string
 	switch fieldType {
-	case "sql.NullBool":
+	case "typex.NullBool":
 		extra = ".Bool"
-	case "sql.NullInt64":
+	case "typex.NullInt":
 		extra = ".Int64"
-	case "sql.NullFloat64":
+	case "typex.NullFloat":
 		extra = ".Float64"
-	case "sql.NullString":
+	case "typex.NullString":
 		extra = ".String"
 	case "typex.NullTime":
 		extra = ".Time"
