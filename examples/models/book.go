@@ -17,12 +17,12 @@ import (
 // Type definition for Book which defined in sql file.
 // This can be used as a model in database operation.
 type Book struct {
-	Id         int32          `db:"id"`
-	Uid        int            `db:"uid"`
-	Name       string         `db:"name"`
-	Content    sql.NullString `db:"content"`
-	CreateTime typex.NullTime `db:"create_time"`
-	Price      int            `db:"price"`
+	Id         int32            `db:"id"`
+	Uid        int32            `db:"uid"`
+	Name       string           `db:"name"`
+	Content    typex.NullString `db:"content"`
+	CreateTime typex.NullTime   `db:"create_time"`
+	Price      int              `db:"price"`
 }
 
 // Type definition for BookBrick. This brick will contains all database
@@ -42,8 +42,7 @@ func newBookBrick(db *sqlx.DB) *BookBrick {
 	return &BookBrick{db: db}
 }
 
-// Begin will start a new transaction for Book brick. If any query
-// is defined as tx sql, this must be invoked.
+// newBookTx will create a new transaction for Book.
 func (b *BookBrick) newBookTx(tx *sqlx.Tx) *BookBrickTx {
 	return &BookBrickTx{tx: tx}
 }
@@ -60,7 +59,7 @@ func (b *BookBrickTx) checkTx() error {
 func (b *BookBrick) CreateBook() sql.Result {
 	return b.db.MustExec(`CREATE TABLE IF NOT EXISTS book (
   "id"  serial NOT NULL PRIMARY KEY,
-  uid int NOT NULL,
+  uid int4 NOT NULL,
   name text NOT NULL,
   content varchar(255),
   create_time TIMESTAMP,

@@ -35,8 +35,7 @@ func new{{ .BrickName }}Brick(db *sqlx.DB) *{{ .BrickName }}Brick {
 }
 
 {{ if .HasTx -}}
-// Begin will start a new transaction for {{ .BrickName }} brick. If any query
-// is defined as tx sql, this must be invoked.
+// new{{ .BrickName }}Tx will create a new transaction for {{ .BrickName }}.
 func (b *{{ .BrickName }}Brick) new{{ .BrickName }}Tx(tx *sqlx.Tx) *{{ .BrickName }}BrickTx {
     return &{{ .BrickName }}BrickTx{tx: tx}
 }

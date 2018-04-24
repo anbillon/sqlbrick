@@ -4,7 +4,6 @@
 //
 // Package typex implements the Scanner interface and the driver
 // Valuer interface so we can use them in database operation.
-
 package typex
 
 import (
@@ -19,6 +18,15 @@ import (
 type NullTime struct {
 	Time  time.Time
 	Valid bool // Valid is true if Time is not NULL
+}
+
+// NewNullTime create a new NullTime. It will check if the given time is valid.
+func NewNullTime(t time.Time) NullTime {
+	valid := true
+	if t.IsZero() {
+		valid = false
+	}
+	return NullTime{Time: t, Valid: valid}
 }
 
 // Scan implements the Scanner interface.

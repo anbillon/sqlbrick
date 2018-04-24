@@ -4,13 +4,12 @@ package main
 
 import (
 	"log"
+	"time"
 
 	"anbillon.com/sqlbrick/examples/models"
 	"anbillon.com/sqlbrick/typex"
-	"database/sql"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
-	"time"
 )
 
 //go:generate sqlbrick -w ./sql/ -o ./models/
@@ -26,8 +25,8 @@ func main() {
 	if _, err = sqlBrick.Book.InsertOne(&models.Book{
 		Uid:        1324,
 		Name:       "Golang",
-		Content:    sql.NullString{String: "Golang program", Valid: true},
-		CreateTime: typex.NullTime{Time: time.Now(), Valid: true},
+		Content:    typex.NewNullString("Golang program"),
+		CreateTime: typex.NewNullTime(time.Now()),
 		Price:      20,
 	}); err != nil {
 		log.Printf("insert error: %v", err)
@@ -82,8 +81,8 @@ func main() {
 		if _, err = tx.Book.TxInsert(&models.Book{
 			Uid:        1234,
 			Name:       "Tx",
-			Content:    sql.NullString{String: "Tx Test", Valid: true},
-			CreateTime: typex.NullTime{Time: time.Now(), Valid: true},
+			Content:    typex.NewNullString("Golang program"),
+			CreateTime: typex.NewNullTime(time.Now()),
 			Price:      30,
 		}); err != nil {
 			log.Printf("wrong: %v", err)
