@@ -52,18 +52,18 @@ func (p *Parser) appendLine() error {
 	currentIndex := len(p.sqlBlocks) - 1
 	current := p.line + "\n"
 
+	if p.newBlock {
+		p.sqlBlocks = append(p.sqlBlocks, current)
+	} else {
+		p.sqlBlocks[currentIndex] += current
+	}
+
 	if _, ok := p.matchDefineHead(current); ok && currentIndex > 0 {
 		if !p.validStatement(p.sqlBlocks[currentIndex]) {
 			return errors.Errorf(
 				"error definition found for new block:\n%v",
 				p.sqlBlocks[currentIndex])
 		}
-	}
-
-	if p.newBlock {
-		p.sqlBlocks = append(p.sqlBlocks, current)
-	} else {
-		p.sqlBlocks[currentIndex] += current
 	}
 
 	return nil
@@ -120,8 +120,13 @@ func (p *Parser) parseFields(block string) error {
 		return errors.Errorf("create ddl is not correct: \n%v", block)
 	}
 
+	specialRegex := regexp.MustCompile(`(UNIQUE|CONSTRAINT|PRIMARY KEY|FOREIGN KEY|REFERENCES|INDEX|CHECK) \s*(\S+)`)
 	fieldsSyntax := strings.Split(block[leftIndex+1:rightIndex], ",")
 	for _, value := range fieldsSyntax {
+		if specialRegex.FindStringSubmatch(value) != nil {
+			continue
+		}
+
 		definition := strings.Split(value, " ")
 		if definition == nil || len(definition) == 0 {
 			return errors.Errorf("invalid defintion: %v", value)
