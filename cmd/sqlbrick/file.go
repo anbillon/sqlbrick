@@ -41,13 +41,13 @@ func getSourceName(sqlFilePath string) string {
 	if dotIndex <= 0 {
 		return ""
 	}
-	return name[0:dotIndex]
+	return name[:dotIndex]
 }
 
 func getFileName(sqlFilePath string) string {
 	index := strings.LastIndex(sqlFilePath, string(os.PathSeparator))
 	if index <= 0 {
-		return ""
+		return sqlFilePath
 	}
 	return sqlFilePath[index+1:]
 }
