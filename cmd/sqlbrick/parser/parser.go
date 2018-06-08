@@ -120,10 +120,10 @@ func (p *Parser) parseFields(block string) error {
 		return errors.Errorf("create ddl is not correct: \n%v", block)
 	}
 
-	specialRegex := regexp.MustCompile(`(UNIQUE|CONSTRAINT|PRIMARY KEY|FOREIGN KEY|REFERENCES|INDEX|CHECK) \s*(\S+)`)
+	specialRegex := regexp.MustCompile(`^\s*(UNIQUE|CONSTRAINT|PRIMARY KEY|FOREIGN KEY|REFERENCES|INDEX|CHECK) \s*(\S+)`)
 	fieldsSyntax := strings.Split(block[leftIndex+1:rightIndex], ",")
 	for _, value := range fieldsSyntax {
-		if specialRegex.FindStringSubmatch(value) != nil {
+		if specialRegex.FindStringSubmatch(strings.TrimSpace(value)) != nil {
 			continue
 		}
 
