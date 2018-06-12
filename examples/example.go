@@ -6,8 +6,8 @@ import (
 	"log"
 	"time"
 
-	"anbillon.com/sqlbrick/examples/models"
-	"anbillon.com/sqlbrick/typex"
+	"anbillon.com/x/sqlbrick/examples/models"
+	"anbillon.com/x/sqlbrick/typex"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 )
