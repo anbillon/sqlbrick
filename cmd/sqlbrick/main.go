@@ -10,7 +10,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"anbillon.com/sqlbrick/cmd/sqlbrick/parser"
+	"anbillon.com/x/sqlbrick/cmd/sqlbrick/parser"
 )
 
 var (

@@ -15,7 +15,7 @@ import (
 	"strings"
 	"text/template"
 
-	"anbillon.com/sqlbrick/cmd/sqlbrick/parser"
+	"anbillon.com/x/sqlbrick/cmd/sqlbrick/parser"
 	"github.com/gobuffalo/packr"
 	"github.com/iancoleman/strcase"
 	"golang.org/x/tools/imports"
