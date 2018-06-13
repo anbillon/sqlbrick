@@ -71,7 +71,15 @@ func (b *{{ .BrickName }}Brick){{ .FuncName }}(dest interface{}) error {
         return err
     }
     {{ else -}}
+    {{ if or (eq .Mapper 1) (eq .Mapper 2) }}
+    stmt, err := b.db.Prepare(`{{ index .Segments 0 }}`)
+    if err != nil {
+        return err
+    }
+    return stmt.QueryRow().Scan(dest)
+    {{- else }}
     return b.db.Select(dest, `{{ index .Segments 0 }}`)
+    {{- end }}
     {{- end }}
 }
 {{ end }}
