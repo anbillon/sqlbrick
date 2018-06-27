@@ -25,7 +25,7 @@ func (b *{{ .BrickName }}Brick){{ .FuncName }}(args *{{ .BrickName }}) (int64, e
     {{- $segment := index $segments $segmentIndex -}}
     {{- if and $removeComma (eq $segmentIndex $indexOfWhere) }}
     if strings.HasSuffix(conditionQuery, ",") {
-        strings.TrimSuffix(conditionQuery, ",")
+        conditionQuery = strings.TrimSuffix(conditionQuery, ",")
     }
     {{- end }}
     conditionQuery += ` {{ $segment }}`
