@@ -3,9 +3,10 @@
 package main
 
 import (
-	"testing"
-	"github.com/stretchr/testify/assert"
 	"path/filepath"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestFileGetBrickName(t *testing.T) {

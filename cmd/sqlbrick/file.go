@@ -1,4 +1,6 @@
 // Copyright (c) 2018-present Anbillon Team (anbillonteam@gmail.com).
+// This source code is licensed under the MIT license found in the
+// LICENSE file in the root directory of this source tree.
 
 package main
 
@@ -39,13 +41,13 @@ func getSourceName(sqlFilePath string) string {
 	if dotIndex <= 0 {
 		return ""
 	}
-	return name[0:dotIndex]
+	return name[:dotIndex]
 }
 
 func getFileName(sqlFilePath string) string {
 	index := strings.LastIndex(sqlFilePath, string(os.PathSeparator))
 	if index <= 0 {
-		return ""
+		return sqlFilePath
 	}
 	return sqlFilePath[index+1:]
 }

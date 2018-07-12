@@ -1,4 +1,6 @@
 // Copyright (c) 2018-present Anbillon Team (anbillonteam@gmail.com).
+// This source code is licensed under the MIT license found in the
+// LICENSE file in the root directory of this source tree.
 
 package main
 
@@ -17,24 +19,16 @@ var (
 	packageName string
 )
 
-func genFromSql(brickName string, sqlFilePath string,
-	sourceFilename string, filename string) {
-	p := parser.NewParser()
-	g := NewGenerator(outputDir, packageName)
+func genFromSql(g *Generator, brickName string, sourceFilename string,
+	outputFilename string, statements []parser.Statement, syntaxes []parser.Syntax) {
 	g.header(sourceFilename)
-	keys, statements, syntaxes, err := p.LoadSqlFile(sqlFilePath)
-	if err != nil {
-		log.Fatalf("error: parse sql file: %s", err)
-		return
+	g.GenerateBrick(sourceFilename, brickName, syntaxes, statements)
+	for _, value := range statements {
+		g.Generate(brickName, value)
 	}
 
-	g.GenerateBrick(sourceFilename, brickName, syntaxes)
-	for _, value := range keys {
-		g.Generate(brickName, value, statements[value])
-	}
-
-	if err := g.Output(filename); err != nil {
-		log.Fatalf("error: generator filename: %s", err)
+	if err := g.Output(outputFilename); err != nil {
+		log.Fatalf("error: generator file: %s", err)
 	}
 }
 
@@ -50,7 +44,7 @@ func main() {
 	flag.StringVar(&packageName, "p", "models", "The package name of generated source code")
 	flag.Parse()
 
-	if outputDir == "" {
+	if len(outputDir) == 0 {
 		outputDir = filepath.Join(workDir, packageName)
 	}
 
@@ -61,15 +55,29 @@ func main() {
 		flag.Usage()
 	} else {
 		var bricks []string
+		var txMap = make(map[string]bool)
 		for _, value := range files {
 			b := getBrickName(value)
 			bricks = append(bricks, b)
-			genFromSql(b, value, getFileName(value), getSourceName(value)+".go")
+			p := parser.NewParser()
+			statements, syntaxes, err := p.LoadSqlFile(value)
+			if err != nil {
+				log.Fatalf("parse sql file fail: %s", err)
+				break
+			}
+			g := NewGenerator(outputDir, packageName)
+			hasTx := g.CheckTx(statements)
+			if hasTx {
+				txMap[b] = hasTx
+			}
+
+			genFromSql(g, b, getFileName(value), getSourceName(value)+".go",
+				statements, syntaxes)
 		}
 
 		bricksGen := NewGenerator(outputDir, packageName)
 		bricksGen.header("")
-		bricksGen.GenerateSqlBrick(bricks)
+		bricksGen.GenerateSqlBrick(bricks, txMap)
 		if err := bricksGen.Output("sqlbrick.go"); err != nil {
 			log.Fatalf("error: writing output: %s", err)
 		}
