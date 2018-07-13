@@ -27,7 +27,7 @@ func TestParserValidStatement(t *testing.T) {
 	}
 	for k, v := range tests {
 		ok := parser.validStatement(v)
-		if k == 3 {
+		if k == 2 || k == 3 {
 			assert.False(t, ok)
 		} else {
 			assert.True(t, ok)
@@ -111,7 +111,7 @@ func TestParserParseComment(t *testing.T) {
 		if k == 1 {
 			assert.Equal(t, "", c)
 		} else {
-			assert.Equal(t, "This is a comment example.", c)
+			assert.Equal(t, "this is a comment example.", c)
 		}
 	}
 }

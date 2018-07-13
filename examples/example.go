@@ -22,7 +22,7 @@ func main() {
 
 	sqlBrick.Book.CreateBook()
 
-	if _, err = sqlBrick.Book.InsertOne(&models.Book{
+	if _, err = sqlBrick.Book.AddOne(&models.Book{
 		Uid:        1324,
 		Name:       "Golang",
 		Content:    typex.NewNullString("Golang program"),
