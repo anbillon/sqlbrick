@@ -19,8 +19,8 @@ required = [
 ]
 
 [[constraint]]
-  branch = "develop"
   name = "anbillon.com/sqlbrick"
+  version = "0.1.0"
 ```
 
 # Usage
