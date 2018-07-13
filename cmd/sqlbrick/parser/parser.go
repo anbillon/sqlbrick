@@ -33,19 +33,38 @@ func NewParser() *Parser {
 }
 
 func (p *Parser) validStatement(block string) bool {
-	_, headOk := p.matchDefineHead(block)
-	_, tailOk := p.matchDefineTail(block)
-	if headOk && tailOk {
-		return true
+	// valid multiple statement with `;`
+	reg := regexp.MustCompile(`;`)
+	m := reg.FindAllStringSubmatch(strings.ToUpper(block), -1)
+	if len(m) > 1 {
+		return false
 	}
 
-	reg := regexp.MustCompile(`TABLE|INSERT|DELETE|UPDATE|SELECT`)
-	m := reg.FindStringSubmatch(strings.ToUpper(block))
-	if m != nil {
-		return true
+	// valid head and tail
+	headMatches, _ := p.matchDefineHead(block)
+	tailMatches, _ := p.matchDefineTail(block)
+	if len(headMatches) != 2 || len(tailMatches) != 1 {
+		return false
 	}
 
-	return false
+	// valid multiple statement with sql key word
+	statement := strings.TrimSpace(
+		strings.Replace(block, headMatches[0], "", 1))
+	statement = strings.TrimSpace(
+		strings.Replace(statement, tailMatches[0], "", 1))
+	// remove all comment
+	commentReg := regexp.MustCompile(`--(.*)`)
+	commentReg.ReplaceAllString(statement, "")
+	// remove all content in brackets
+	bracketsReg := regexp.MustCompile(`\([^()]*\)`)
+	statement = bracketsReg.ReplaceAllString(statement, "")
+
+	keyReg := regexp.MustCompile(`TABLE|INSERT|DELETE|UPDATE|SELECT`)
+	if len(keyReg.FindAllStringSubmatch(statement, -1)) > 1 {
+		return false
+	}
+
+	return true
 }
 
 func (p *Parser) appendLine() error {
@@ -58,12 +77,11 @@ func (p *Parser) appendLine() error {
 		p.sqlBlocks[currentIndex] += current
 	}
 
-	if _, ok := p.matchDefineHead(current); ok && currentIndex > 0 {
-		if !p.validStatement(p.sqlBlocks[currentIndex]) {
-			return errors.Errorf(
-				"error definition found for new block:\n%v",
-				p.sqlBlocks[currentIndex])
-		}
+	if p.next && !p.validStatement(p.sqlBlocks[currentIndex]) {
+		return errors.Errorf(
+			"error definition found:\n%v\n"+
+				"check if multiple definition exsited or definition key word missed",
+			p.sqlBlocks[currentIndex])
 	}
 
 	return nil
@@ -182,6 +200,11 @@ func (p *Parser) parseComment() string {
 		p.currentBlock = strings.TrimSpace(
 			strings.Replace(p.currentBlock, matches[i][0], "", 1))
 		comment += matches[i][1]
+	}
+
+	if len(comment) > 0 {
+		comment = strings.TrimSpace(comment)
+		comment = strings.ToLower(string([]rune(comment)[0])) + comment[1:]
 	}
 
 	return strings.TrimSpace(comment)
