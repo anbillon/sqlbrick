@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS book (
 );
 {end define}
 
-{define name InsertOne}
+{define name AddOne}
 INSERT INTO book (uid, name, content, create_time, price)
   VALUES (${uid}, ${name}, ${content}, ${create_time}, ${price});
 {end define}
