@@ -10,7 +10,7 @@ func (b *{{ .BrickName }}Brick){{ .FuncName }}(args *{{ .BrickName }}) (int64, e
 {{- end -}}
     {{- $conditionLen := len .Conditions -}}
     {{- if gt $conditionLen 0 }}
-    conditionQuery := `{{ index .Segments 0 }} `
+    conditionQuery := `{{ index .Segments 0 }}`
     {{- $segments := .Segments -}}
     {{- $segmentLen := len .Segments -}}
     {{- CacheSet "segment" 1 -}}
@@ -28,7 +28,7 @@ func (b *{{ .BrickName }}Brick){{ .FuncName }}(args *{{ .BrickName }}) (int64, e
         conditionQuery = strings.TrimSuffix(conditionQuery, ",")
     }
     {{- end }}
-    conditionQuery += ` {{ $segment }}`
+    conditionQuery += `{{ $segment }}`
     {{- $segmentIndex := Add $segmentIndex 1 -}}
     {{- CacheSet "segment" $segmentIndex -}}
     {{- end -}}

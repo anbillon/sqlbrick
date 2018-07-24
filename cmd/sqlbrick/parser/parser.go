@@ -334,6 +334,7 @@ func (p *Parser) parseDynamicQuery() (*DynamicQuery, error) {
 	headRegexp := regexp.MustCompile(`({\s*if (.*?)})`)
 	endRegexp := regexp.MustCompile(`({\s*end \s*if\s*})`)
 	fieldRegexp := regexp.MustCompile(`:([A-Za-z0-9_-]*)`)
+	commaRegexp := regexp.MustCompile(`\s*,\s*$`)
 
 	args, consumedQuery, err := p.parsePlaceholder(statement)
 	if err != nil {
@@ -381,6 +382,9 @@ func (p *Parser) parseDynamicQuery() (*DynamicQuery, error) {
 		if index < len(matches)-1 && len(matches) != 1 && !strings.HasSuffix(query, ",") {
 			return nil, errors.Errorf("invalid statement, missing comma: %v", query)
 		}
+		if len(commaRegexp.FindStringSubmatch(query)) < 1 {
+			query += " "
+		}
 
 		hm := headRegexp.FindStringSubmatch(value[0])
 		if hm == nil || len(hm) != 3 {
@@ -410,6 +414,17 @@ func (p *Parser) parseDynamicQuery() (*DynamicQuery, error) {
 			spaceNumber += 1
 			continue
 		}
+
+		// add space before statement for last segment
+		if index == len(segments)-1 && !strings.HasPrefix(segment, " ") {
+			segment = " " + segment
+		}
+
+		// add space suffix for segment without comma
+		if index < len(segments)-1 &&
+			len(commaRegexp.FindStringSubmatch(segment)) < 1 {
+			segment += " "
+		}
 		realSegments = append(realSegments, segment)
 		if strings.Contains(segment, "WHERE") {
 			indexOfWhere = index - spaceNumber
@@ -418,7 +433,7 @@ func (p *Parser) parseDynamicQuery() (*DynamicQuery, error) {
 				removeLastComma = false
 			}
 		}
-		if strings.HasPrefix(segment, "WHERE") {
+		if strings.HasPrefix(segment, " WHERE") {
 			removeLastComma = true
 		}
 	}
