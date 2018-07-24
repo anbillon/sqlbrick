@@ -91,9 +91,9 @@ func (b *BookBrick) UpdateSomeThing(args *Book) (int64, error) {
 	if args.Content.String != "" {
 		conditionQuery += `content = :content,`
 	}
-	conditionQuery += ` name = :name,`
+	conditionQuery += `name = :name,`
 	if args.CreateTime.Time.Unix() != 0 {
-		conditionQuery += `create_time = :create_time`
+		conditionQuery += `create_time = :create_time `
 	}
 	if strings.HasSuffix(conditionQuery, ",") {
 		conditionQuery = strings.TrimSuffix(conditionQuery, ",")
