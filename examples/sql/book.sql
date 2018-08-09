@@ -1,3 +1,4 @@
+-- Create table if not exsited
 {define name CreateBook}
 CREATE TABLE IF NOT EXISTS book (
   "id"  serial NOT NULL PRIMARY KEY,

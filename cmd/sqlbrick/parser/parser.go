@@ -210,6 +210,11 @@ func (p *Parser) parseComment() string {
 	return strings.TrimSpace(comment)
 }
 
+func (p *Parser) removeComment(block string) string {
+	reg := regexp.MustCompile(`--(.*)`)
+	return strings.TrimSpace(reg.ReplaceAllString(block, ""))
+}
+
 // parseDynamicQueries will parse definition for sql statement
 func (p *Parser) parseDefinition() (*Definition, error) {
 	nameRegex := regexp.MustCompile(`name (.*)`)
@@ -470,7 +475,7 @@ func (p *Parser) parseSqlBlocks() error {
 	// parse field first
 	createDDLIndex := -1
 	for index, block := range p.sqlBlocks {
-		if p.isCreateDDL(block) {
+		if p.isCreateDDL(p.removeComment(block)) {
 			createDDLIndex = index
 			break
 		}
