@@ -56,8 +56,10 @@ func (p *Parser) validStatement(block string) bool {
 	commentReg := regexp.MustCompile(`--(.*)`)
 	commentReg.ReplaceAllString(statement, "")
 	// remove all content in brackets
-	bracketsReg := regexp.MustCompile(`\([^()]*\)`)
-	statement = bracketsReg.ReplaceAllString(statement, "")
+	bracketsReg := regexp.MustCompile(`\(([^()]|\(([^()])*\))*\)`)
+	for ; len(bracketsReg.FindStringSubmatch(statement)) > 0; {
+		statement = bracketsReg.ReplaceAllString(statement, "")
+	}
 
 	keyReg := regexp.MustCompile(`TABLE|INSERT|DELETE|UPDATE|SELECT`)
 	if len(keyReg.FindAllStringSubmatch(statement, -1)) > 1 {
