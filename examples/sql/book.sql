@@ -54,6 +54,10 @@ SELECT * FROM book WHERE uid = ${uid} ORDER BY name ASC;
 DELETE FROM book WHERE id = ${id};
 {end define}
 
+{define name DeleteByIdAndUid}
+DELETE FROM book WHERE id = ${id} and uid = ${uid};
+{end define}
+
 {define name TxInsert, tx true}
 INSERT INTO book (uid, name, content, create_time, price)
   VALUES (${uid}, ${name}, ${content}, ${create_time}, ${price});
