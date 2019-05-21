@@ -2,7 +2,7 @@
 // This source code is licensed under the MIT license found in the
 // LICENSE file in the root directory of this source tree.
 
-package parser
+package main
 
 var fieldTypes = map[string]string{
 	"bool":        "bool",
@@ -39,7 +39,7 @@ var fieldTypes = map[string]string{
 	"inet":        "string",
 	"macaddr":     "string",
 	"uuid":        "string",
-	"json":        "string",
+	"json":        "typex.JsonText",
 	"xml":         "string",
 	"year":        "string",
 	"date":        "time.Time",
@@ -92,7 +92,7 @@ var nullableFieldTypes = map[string]string{
 	"inet":        "typex.NullString",
 	"macaddr":     "typex.NullString",
 	"uuid":        "typex.NullString",
-	"json":        "typex.NullString",
+	"json":        "typex.NullJsonText",
 	"xml":         "typex.NullString",
 	"year":        "typex.NullString",
 	"date":        "typex.NullTime",

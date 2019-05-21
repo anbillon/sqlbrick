@@ -6,8 +6,8 @@ import (
 	"log"
 	"time"
 
-	"anbillon.com/sqlbrick/examples/models"
-	"anbillon.com/sqlbrick/typex"
+	"github.com/anbillon/sqlbrick/examples/models"
+	"github.com/anbillon/sqlbrick/typex"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 )
@@ -20,7 +20,7 @@ func main() {
 	}
 	sqlBrick := models.NewSqlBrick(db)
 
-	sqlBrick.Book.CreateBook()
+	_ = sqlBrick.Book.CreateBook()
 
 	if _, err = sqlBrick.Book.AddOne(&models.Book{
 		Uid:        1324,

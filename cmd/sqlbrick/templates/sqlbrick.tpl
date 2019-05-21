@@ -5,7 +5,7 @@ import (
     "github.com/jmoiron/sqlx"
 )
 
-// Type definition for SqlBrick. It contains all bricks depends on the number of
+// Type definition for SqlBrick. It contains all bricks depend on the number of
 // sql files. It also wraps some sqlx func for for convenience.
 type SqlBrick struct {
     Db *sqlx.DB

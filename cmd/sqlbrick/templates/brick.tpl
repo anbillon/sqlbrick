@@ -3,7 +3,7 @@ import (
     "errors"
     "time"
 
-    "anbillon.com/sqlbrick/typex"
+    "github.com/anbillon/sqlbrick/typex"
     "github.com/jmoiron/sqlx"
 )
 
