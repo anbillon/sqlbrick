@@ -9,8 +9,6 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-
-	"anbillon.com/sqlbrick/cmd/sqlbrick/parser"
 )
 
 var (
@@ -20,7 +18,7 @@ var (
 )
 
 func genFromSql(g *Generator, brickName string, sourceFilename string,
-	outputFilename string, statements []parser.Statement, syntaxes []parser.Syntax) {
+	outputFilename string, statements []Statement, syntaxes []Syntax) {
 	g.header(sourceFilename)
 	g.GenerateBrick(sourceFilename, brickName, syntaxes, statements)
 	for _, value := range statements {
@@ -59,7 +57,7 @@ func main() {
 		for _, value := range files {
 			b := getBrickName(value)
 			bricks = append(bricks, b)
-			p := parser.NewParser()
+			p := NewParser()
 			statements, syntaxes, err := p.LoadSqlFile(value)
 			if err != nil {
 				log.Fatalf("parse sql file fail: %s", err)

@@ -12,15 +12,11 @@ As metioned above, this is not an orm library. If you are looking for some orm l
 ```shell
 go get -u anbillon.com/sqlbrick/cmd/sqlbrick
 ```
-Add the following to your dependency if you are working with `dep`
-```toml
-required = [
-  "anbillon.com/sqlbrick/typex",
-]
-
-[[constraint]]
-  name = "anbillon.com/sqlbrick"
-  version = "0.1.0"
+Add the following to your dependency if you are working with `go modules`
+```mod
+require (
+	github.com/anbillon/sqlbrick/typex develop
+)
 ```
 
 # Usage
