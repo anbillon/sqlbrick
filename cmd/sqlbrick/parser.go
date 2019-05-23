@@ -61,6 +61,11 @@ func (p *Parser) validStatement(block string) bool {
 		statement = bracketsReg.ReplaceAllString(statement, "")
 	}
 
+	unionReg := regexp.MustCompile(`SELECT(.*)\sUNION`)
+	if len(unionReg.FindAllStringSubmatch(statement, -1)) >= 1 {
+		return true
+	}
+
 	keyReg := regexp.MustCompile(`TABLE|INSERT|DELETE|UPDATE|SELECT`)
 	if len(keyReg.FindAllStringSubmatch(statement, -1)) > 1 {
 		return false

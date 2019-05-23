@@ -1,7 +1,7 @@
 sqlbrick
 ========
 
-[![Build Status](https://travis-ci.org/Tourbillon/sqlbrick.svg?branch=develop)](https://travis-ci.org/Tourbillon/sqlbrick) [![license](http://img.shields.io/badge/license-MIT-red.svg?style=flat)](https://raw.githubusercontent.com/Tourbillon/sqlbrick/master/LICENSE)
+[![Build Status](https://travis-ci.org/anbillon/sqlbrick.svg?branch=develop)](https://travis-ci.org/Tourbillon/sqlbrick) [![license](http://img.shields.io/badge/license-MIT-red.svg?style=flat)](https://raw.githubusercontent.com/Tourbillon/sqlbrick/master/LICENSE)
 
 SQLBrick generates golang function from your SQL statements. It's not another orm library, but a tool to generate golang function and models from given SQL files. The generated source code is totally based on  [sqlx][1]. 
 

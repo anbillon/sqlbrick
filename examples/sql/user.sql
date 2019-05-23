@@ -11,6 +11,12 @@ CREATE TABLE IF NOT EXISTS user (
 SELECT * FROM user WHERE id = ${id};
 {end define}
 
+{define name UnionSelect}
+SELECT name FROM user
+UNION ALL
+SELECT age FROM user;
+{end define}
+
 {define name TxInsert, tx true}
 INSERT INTO user(name, age) VALUES (${name}, ${age});
 {end define}
