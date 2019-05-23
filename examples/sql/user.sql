@@ -1,8 +1,8 @@
 {define name CreateUser}
 CREATE TABLE IF NOT EXISTS user (
-  id serial NOT NULL PRIMARY KEY,
-  name text NOT NULL,
-  age int NOT NULL
+  id INTEGER NOT NULL PRIMARY KEY,
+  name TEXT NOT NULL,
+  age INTEGER NOT NULL
 );
 {end define}
 

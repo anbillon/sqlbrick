@@ -21,7 +21,7 @@ type Book struct {
 	Name       string           `db:"name"`
 	Content    typex.NullString `db:"content"`
 	CreateTime typex.NullTime   `db:"create_time"`
-	Price      int              `db:"price"`
+	Price      int32            `db:"price"`
 }
 
 // Type definition for BookBrick. This brick will contains all database
@@ -57,12 +57,12 @@ func (b *BookBrickTx) checkTx() error {
 // CreateBook create table if not exsited
 func (b *BookBrick) CreateBook() error {
 	stmt, err := b.db.Prepare(`CREATE TABLE IF NOT EXISTS book (
-  "id"  serial NOT NULL PRIMARY KEY,
-  uid int4 NOT NULL,
-  name text NOT NULL,
-  content varchar(255),
+  "id"  INTEGER NOT NULL PRIMARY KEY,
+  uid INTEGER NOT NULL,
+  name TEXT NOT NULL,
+  content VARCHAR(255),
   create_time TIMESTAMP,
-  price int NOT NULL
+  price INTEGER NOT NULL
 )`)
 	if err != nil {
 		return err
