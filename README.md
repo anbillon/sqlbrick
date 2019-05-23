@@ -15,7 +15,7 @@ go get -u anbillon.com/sqlbrick/cmd/sqlbrick
 Add the following to your dependency if you are working with `go modules`
 ```mod
 require (
-	github.com/anbillon/sqlbrick/typex develop
+	github.com/anbillon/sqlbrick v0.2.0
 )
 ```
 
