@@ -1,17 +1,14 @@
 language: go
 
 go:
-  - "1.8"
-  - "1.9"
-  - "1.10.x"
-
-before_install:
-  - curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
-  - mkdir -p $GOPATH/src/anbillon.com && cd .. && mv sqlbrick $GOPATH/src/anbillon.com/
-  - cd $GOPATH/src/anbillon.com/sqlbrick
+  - 1.11.x
+  - 1.12.x
+  - tip
+env:
+  - GO111MODULE=on
 
 install:
-  - dep ensure -v
+  - go mod download
 
 script:
   - go test ./...
@@ -19,3 +16,7 @@ script:
 
 after_success:
   - sqlbrick -help
+
+matrix:
+  allow_failures:
+    - go: tip

@@ -1,11 +1,12 @@
+-- Create table if not exsited
 {define name CreateBook}
 CREATE TABLE IF NOT EXISTS book (
-  "id"  serial NOT NULL PRIMARY KEY,
-  uid int4 NOT NULL,
-  name text NOT NULL,
-  content varchar(255),
+  "id"  INTEGER NOT NULL PRIMARY KEY,
+  uid INTEGER NOT NULL,
+  name TEXT NOT NULL,
+  content VARCHAR(255),
   create_time TIMESTAMP,
-  price int NOT NULL
+  price INTEGER NOT NULL
 );
 {end define}
 
@@ -51,6 +52,10 @@ SELECT * FROM book WHERE uid = ${uid} ORDER BY name ASC;
 -- An example to show DeleteById.
 {define name DeleteById}
 DELETE FROM book WHERE id = ${id};
+{end define}
+
+{define name DeleteByIdAndUid}
+DELETE FROM book WHERE id = ${id} and uid = ${uid};
 {end define}
 
 {define name TxInsert, tx true}

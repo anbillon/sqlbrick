@@ -6,21 +6,22 @@ import (
 	"log"
 	"time"
 
-	"anbillon.com/sqlbrick/examples/models"
-	"anbillon.com/sqlbrick/typex"
+	"github.com/anbillon/sqlbrick/examples/models"
+	"github.com/anbillon/sqlbrick/typex"
 	"github.com/jmoiron/sqlx"
-	_ "github.com/lib/pq"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 //go:generate sqlbrick -w ./sql/ -o ./models/
 func main() {
-	db, err := sqlx.Connect("postgres", "postgres://dev:developer@localhost:5432/dev?sslmode=disable")
+	db, err := sqlx.Connect("sqlite3", "./example.db")
 	if err != nil {
 		log.Fatalln(err)
 	}
 	sqlBrick := models.NewSqlBrick(db)
 
-	sqlBrick.Book.CreateBook()
+	_ = sqlBrick.Book.CreateBook()
+	_ = sqlBrick.User.CreateUser()
 
 	if _, err = sqlBrick.Book.AddOne(&models.Book{
 		Uid:        1324,

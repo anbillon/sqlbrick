@@ -2,7 +2,7 @@
 // This source code is licensed under the MIT license found in the
 // LICENSE file in the root directory of this source tree.
 
-package parser
+package main
 
 import (
 	"bufio"
@@ -56,8 +56,15 @@ func (p *Parser) validStatement(block string) bool {
 	commentReg := regexp.MustCompile(`--(.*)`)
 	commentReg.ReplaceAllString(statement, "")
 	// remove all content in brackets
-	bracketsReg := regexp.MustCompile(`\([^()]*\)`)
-	statement = bracketsReg.ReplaceAllString(statement, "")
+	bracketsReg := regexp.MustCompile(`\(([^()]|\(([^()])*\))*\)`)
+	for ; len(bracketsReg.FindStringSubmatch(statement)) > 0; {
+		statement = bracketsReg.ReplaceAllString(statement, "")
+	}
+
+	unionReg := regexp.MustCompile(`SELECT(.*)\sUNION`)
+	if len(unionReg.FindAllStringSubmatch(statement, -1)) >= 1 {
+		return true
+	}
 
 	keyReg := regexp.MustCompile(`TABLE|INSERT|DELETE|UPDATE|SELECT`)
 	if len(keyReg.FindAllStringSubmatch(statement, -1)) > 1 {
@@ -210,6 +217,11 @@ func (p *Parser) parseComment() string {
 	return strings.TrimSpace(comment)
 }
 
+func (p *Parser) removeComment(block string) string {
+	reg := regexp.MustCompile(`--(.*)`)
+	return strings.TrimSpace(reg.ReplaceAllString(block, ""))
+}
+
 // parseDynamicQueries will parse definition for sql statement
 func (p *Parser) parseDefinition() (*Definition, error) {
 	nameRegex := regexp.MustCompile(`name (.*)`)
@@ -334,6 +346,7 @@ func (p *Parser) parseDynamicQuery() (*DynamicQuery, error) {
 	headRegexp := regexp.MustCompile(`({\s*if (.*?)})`)
 	endRegexp := regexp.MustCompile(`({\s*end \s*if\s*})`)
 	fieldRegexp := regexp.MustCompile(`:([A-Za-z0-9_-]*)`)
+	commaRegexp := regexp.MustCompile(`\s*,\s*$`)
 
 	args, consumedQuery, err := p.parsePlaceholder(statement)
 	if err != nil {
@@ -381,6 +394,9 @@ func (p *Parser) parseDynamicQuery() (*DynamicQuery, error) {
 		if index < len(matches)-1 && len(matches) != 1 && !strings.HasSuffix(query, ",") {
 			return nil, errors.Errorf("invalid statement, missing comma: %v", query)
 		}
+		if len(commaRegexp.FindStringSubmatch(query)) < 1 {
+			query += " "
+		}
 
 		hm := headRegexp.FindStringSubmatch(value[0])
 		if hm == nil || len(hm) != 3 {
@@ -410,6 +426,17 @@ func (p *Parser) parseDynamicQuery() (*DynamicQuery, error) {
 			spaceNumber += 1
 			continue
 		}
+
+		// add space before statement for last segment
+		if index == len(segments)-1 && !strings.HasPrefix(segment, " ") {
+			segment = " " + segment
+		}
+
+		// add space suffix for segment without comma
+		if index < len(segments)-1 &&
+			len(commaRegexp.FindStringSubmatch(segment)) < 1 {
+			segment += " "
+		}
 		realSegments = append(realSegments, segment)
 		if strings.Contains(segment, "WHERE") {
 			indexOfWhere = index - spaceNumber
@@ -418,7 +445,7 @@ func (p *Parser) parseDynamicQuery() (*DynamicQuery, error) {
 				removeLastComma = false
 			}
 		}
-		if strings.HasPrefix(segment, "WHERE") {
+		if strings.HasPrefix(segment, " WHERE") {
 			removeLastComma = true
 		}
 	}
@@ -455,7 +482,7 @@ func (p *Parser) parseSqlBlocks() error {
 	// parse field first
 	createDDLIndex := -1
 	for index, block := range p.sqlBlocks {
-		if p.isCreateDDL(block) {
+		if p.isCreateDDL(p.removeComment(block)) {
 			createDDLIndex = index
 			break
 		}

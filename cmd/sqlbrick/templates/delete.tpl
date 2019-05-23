@@ -33,12 +33,14 @@ func (b *{{ .BrickName }}Brick){{ .FuncName }}({{ .ArgName }} interface{}) (int6
         return 0, err
     }
 
+    {{ if eq .TotalArgs 1 -}}
     // create map arguments for sqlx
     args := map[string]interface{}{
-        {{ range $k, $v := .Args -}}
-        {{ $mk := ToSnake $v }}"{{ $mk }}": {{ $v }},
-        {{- end }}
+    {{- range $k, $v := .Args }}
+    {{ $mk := ToSnake $v }}"{{ $mk }}": {{ $v }},
+    {{- end }}
     }
+    {{ end }}
 
     result, err := stmt.Exec(args)
     if err != nil {
