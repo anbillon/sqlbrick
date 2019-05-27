@@ -21,7 +21,7 @@ func getSqlFiles(dir string) ([]string, error) {
 	}
 
 	for _, value := range files {
-		if value.IsDir() || !strings.HasSuffix(value.Name(), ".sql") {
+		if value.IsDir() || !strings.HasSuffix(value.Name(), ".sqb") {
 			continue
 		}
 		sqlFiles = append(sqlFiles, filepath.Join(workDir, value.Name()))

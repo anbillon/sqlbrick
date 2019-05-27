@@ -3,9 +3,9 @@
 {{ .Comment }}
 {{- end }}
 {{ if .IsTx -}}
-func (b *{{ .BrickName }}BrickTx){{ .FuncName }}(args *{{ .BrickName }}) (sql.Result, error) {
+func (b *{{ .BrickName }}BrickTx){{ .FuncName }}(args *entity.{{ .BrickName }}) (sql.Result, error) {
 {{ else -}}
-func (b *{{ .BrickName }}Brick){{ .FuncName }}(args *{{ .BrickName }}) (sql.Result, error) {
+func (b *{{ .BrickName }}Brick){{ .FuncName }}(args *entity.{{ .BrickName }}) (sql.Result, error) {
 {{- end -}}
     {{ if .IsTx -}}
     if err := b.checkTx(); err != nil {
