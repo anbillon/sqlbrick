@@ -17,7 +17,7 @@ type SqlBrick struct {
 {{ if $txLen -}}
 // Type definition for brick transaction. This aims at sql transaction.
 // If you want a transaction, then invoke 'Begin' to get this struct.
-type BrickTx struct {
+type SqlBrickTx struct {
     tx *sqlx.Tx
     {{- range $k, $v := .TxMap }}
     {{- if $v }}
@@ -40,13 +40,13 @@ func NewSqlBrick(db *sqlx.DB) *SqlBrick {
 {{ if $txLen -}}
 // Begin will start a new transaction for bricks. If any query
 // is defined as tx sql, this must be invoked.
-func (b *SqlBrick) Begin() (*BrickTx, error) {
+func (b *SqlBrick) Begin() (*SqlBrickTx, error) {
     tx, err := b.Db.Beginx()
     if err != nil {
         return nil, err
     }
 
-    return &BrickTx{
+    return &SqlBrickTx{
         tx: tx,
         {{- range $k, $v := .TxMap }}
         {{- if $v }}
@@ -58,7 +58,7 @@ func (b *SqlBrick) Begin() (*BrickTx, error) {
 
 // Commit will end a transaction for brick. Begin must be invoked
 // before Commit. Otherwise there will be an error.
-func (b *BrickTx) Commit() error {
+func (b *SqlBrickTx) Commit() error {
     if b.tx == nil {
         return errors.New("the Begin func must be invoked first")
     }

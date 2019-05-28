@@ -22,6 +22,7 @@ import (
 
 const (
 	sqlbrickTemplate = "sqlbrick.tpl"
+	entityTemplate   = "entity.tpl"
 	brickTemplate    = "brick.tpl"
 	ddlTemplate      = "ddl.tpl"
 	insertTemplate   = "insert.tpl"
@@ -62,8 +63,8 @@ type SqlFunc struct {
 	Comment      string
 }
 
-// NewGenerator create a new Generator with output dir and package name.
-func NewGenerator(outputDir string, packageName string) *Generator {
+// newGenerator create a new Generator with output dir and package name.
+func newGenerator(outputDir string, packageName string) *Generator {
 	g := &Generator{
 		box:         packr.NewBox("./templates"),
 		outputDir:   outputDir,
@@ -146,6 +147,25 @@ func (g *Generator) CheckTx(statements []Statement) bool {
 		}
 	}
 	return hasTxStatement
+}
+
+func (g *Generator) GenerateEntity(sourceFilename string, outputFilename string,
+	brick string, syntaxes []Syntax) {
+	g.header(sourceFilename)
+
+	if err := g.applyTemplate(entityTemplate, struct {
+		BrickName string
+		Syntaxes  []Syntax
+	}{
+		BrickName: brick,
+		Syntaxes:  syntaxes,
+	}); err != nil {
+		log.Fatalf("error generate entity: %v", err)
+	}
+
+	if err := g.Output(outputFilename); err != nil {
+		log.Fatalf("error: generator file: %s", err)
+	}
 }
 
 // GenerateBrick will add brick definition into the generator buffer.

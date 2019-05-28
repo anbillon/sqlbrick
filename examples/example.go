@@ -6,7 +6,8 @@ import (
 	"log"
 	"time"
 
-	"github.com/anbillon/sqlbrick/examples/models"
+	"github.com/anbillon/sqlbrick/examples/models/brick"
+	"github.com/anbillon/sqlbrick/examples/models/entity"
 	"github.com/anbillon/sqlbrick/typex"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/mattn/go-sqlite3"
@@ -18,12 +19,12 @@ func main() {
 	if err != nil {
 		log.Fatalln(err)
 	}
-	sqlBrick := models.NewSqlBrick(db)
+	sqlBrick := brick.NewSqlBrick(db)
 
 	_ = sqlBrick.Book.CreateBook()
 	_ = sqlBrick.User.CreateUser()
 
-	if _, err = sqlBrick.Book.AddOne(&models.Book{
+	if _, err = sqlBrick.Book.AddOne(&entity.Book{
 		Uid:        1324,
 		Name:       "Golang",
 		Content:    typex.NewNullString("Golang program"),
@@ -33,16 +34,16 @@ func main() {
 		log.Printf("insert error: %v", err)
 	}
 
-	var books []models.Book
+	var books []entity.Book
 	if err := sqlBrick.Book.SelectAll(&books); err != nil {
 		log.Printf("error: %v", err)
 	} else {
 		log.Printf("select all: %v", books)
 	}
 
-	var book models.Book
+	var book entity.Book
 	if err := sqlBrick.Book.SelectById(&book, 25); err != nil {
-		log.Printf("wrror: %v", err)
+		log.Printf("wrong: %v", err)
 	} else {
 		log.Printf("select by id: %v", book)
 	}
@@ -54,7 +55,7 @@ func main() {
 		log.Printf("select count: %v", count)
 	}
 
-	var booksx []models.Book
+	var booksx []entity.Book
 	if err := sqlBrick.Book.SelectByUid(&booksx, 1324); err != nil {
 		log.Printf("wrong: %v", err)
 	} else {
@@ -65,7 +66,7 @@ func main() {
 		log.Printf("wrong: %v", err)
 	}
 
-	if _, err := sqlBrick.Book.UpdateSomeThing(&models.Book{
+	if _, err := sqlBrick.Book.UpdateSomeThing(&entity.Book{
 		Id:         30,
 		Uid:        1324,
 		Name:       "Sqlbrick",
@@ -79,7 +80,7 @@ func main() {
 	if tx, err := sqlBrick.Begin(); err != nil {
 		log.Printf("wrong: %v", err)
 	} else {
-		if _, err = tx.Book.TxInsert(&models.Book{
+		if _, err = tx.Book.TxInsert(&entity.Book{
 			Uid:        1234,
 			Name:       "Tx",
 			Content:    typex.NewNullString("Golang program"),
@@ -93,7 +94,7 @@ func main() {
 			log.Printf("wrong: %v", err)
 			return
 		}
-		var errTx = models.User{}
+		var errTx = entity.User{}
 		if _, err := tx.Book.TxDeleteById(errTx); err != nil {
 			log.Printf("wrong and rollback: %v", err)
 			return

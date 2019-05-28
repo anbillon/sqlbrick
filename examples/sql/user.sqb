@@ -1,5 +1,5 @@
 {define name CreateUser}
-CREATE TABLE IF NOT EXISTS user (
+CREATE TABLE IF NOT EXISTS "user" (
   id INTEGER NOT NULL PRIMARY KEY,
   name TEXT NOT NULL,
   age INTEGER NOT NULL
@@ -12,9 +12,9 @@ SELECT * FROM user WHERE id = ${id};
 {end define}
 
 {define name UnionSelect}
-SELECT name FROM user
+SELECT name FROM "user"
 UNION ALL
-SELECT age FROM user;
+SELECT age FROM "user";
 {end define}
 
 {define name TxInsert, tx true}
@@ -26,5 +26,5 @@ DELETE FROM user WHERE id := ${id};
 {end define}
 
 {define name CountAll, mapper basicType}
-SELECT COUNT (*) FROM user;
+SELECT COUNT (*) FROM "user";
 {end define}

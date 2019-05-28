@@ -12,9 +12,8 @@ import (
 )
 
 var (
-	workDir     string
-	outputDir   string
-	packageName string
+	workDir   string
+	outputDir string
 )
 
 func genFromSql(g *Generator, brickName string, sourceFilename string,
@@ -39,17 +38,21 @@ func main() {
 
 	flag.StringVar(&workDir, "w", dir, "The work directory to search sql files")
 	flag.StringVar(&outputDir, "o", "", "The output directory of generated source code")
-	flag.StringVar(&packageName, "p", "models", "The package name of generated source code")
 	flag.Parse()
 
 	if len(outputDir) == 0 {
-		outputDir = filepath.Join(workDir, packageName)
+		outputDir = workDir
+	}
+
+	outputDir, err = filepath.Abs(outputDir)
+	if err != nil {
+		log.Fatalf("error: check directory: %s", err)
 	}
 
 	if files, err := getSqlFiles(workDir); err != nil {
 		log.Fatalf("error: generate from file: %s", err)
 	} else if len(files) == 0 {
-		log.Printf("error: no sql files found in current dir")
+		log.Printf("error: no sqb files found in current dir")
 		flag.Usage()
 	} else {
 		var bricks []string
@@ -63,21 +66,29 @@ func main() {
 				log.Fatalf("parse sql file fail: %s", err)
 				break
 			}
-			g := NewGenerator(outputDir, packageName)
+
+			inputFileName := getFileName(value)
+			outputFileName := getSourceName(value) + ".go"
+
+			entityGen := newGenerator(filepath.Join(outputDir, "entity"), "entity")
+			entityGen.GenerateEntity(inputFileName, outputFileName, b, syntaxes)
+
+			g := newGenerator(filepath.Join(outputDir, "brick"), "brick")
 			hasTx := g.CheckTx(statements)
 			if hasTx {
 				txMap[b] = hasTx
 			}
 
-			genFromSql(g, b, getFileName(value), getSourceName(value)+".go",
-				statements, syntaxes)
+			genFromSql(g, b, inputFileName, outputFileName, statements, syntaxes)
 		}
 
-		bricksGen := NewGenerator(outputDir, packageName)
+		bricksGen := newGenerator(filepath.Join(outputDir, "brick"), "brick")
 		bricksGen.header("")
 		bricksGen.GenerateSqlBrick(bricks, txMap)
 		if err := bricksGen.Output("sqlbrick.go"); err != nil {
 			log.Fatalf("error: writing output: %s", err)
+		} else {
+			log.Printf("SqlBrick has wrote to: %s", outputDir)
 		}
 	}
 }

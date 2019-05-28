@@ -173,7 +173,7 @@ func TestParserIsCreateDDL(t *testing.T) {
 
 func TestParserLoadSqlFile(t *testing.T) {
 	tests := []string{
-		"../../examples/sql/book.sql",
+		"../../examples/sql/book.sqb",
 	}
 
 	for k, v := range tests {
