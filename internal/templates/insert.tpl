@@ -3,9 +3,9 @@
 {{ .Comment }}
 {{- end }}
 {{ if .IsTx -}}
-func (b *{{ .BrickName }}BrickTx){{ .FuncName }}(args *entity.{{ .BrickName }}) (sql.Result, error) {
+func (b *{{ .BrickName }}BrickTx){{ .FuncName }}({{- if .WithContext -}}ctx context.Context, {{ end }}args *entity.{{ .BrickName }}) (sql.Result, error) {
 {{ else -}}
-func (b *{{ .BrickName }}Brick){{ .FuncName }}(args *entity.{{ .BrickName }}) (sql.Result, error) {
+func (b *{{ .BrickName }}Brick){{ .FuncName }}({{- if .WithContext -}}ctx context.Context, {{ end }}args *entity.{{ .BrickName }}) (sql.Result, error) {
 {{- end -}}
     {{ if .IsTx -}}
     if err := b.checkTx(); err != nil {
@@ -14,6 +14,10 @@ func (b *{{ .BrickName }}Brick){{ .FuncName }}(args *entity.{{ .BrickName }}) (s
 
     stmt, err := b.tx.PrepareNamed(
         `{{ index .Segments 0 }}`)
+    {{- else -}}
+        stmt, err := b.db.PrepareNamed(
+            `{{ index .Segments 0 }}`)
+    {{- end }}
     if err != nil {
         {{- if .IsTx -}}
         if rbe := b.tx.Rollback(); rbe != nil {
@@ -23,20 +27,15 @@ func (b *{{ .BrickName }}Brick){{ .FuncName }}(args *entity.{{ .BrickName }}) (s
         return nil, err
     }
 
-    if result, err := stmt.Exec(args); err != nil {
+    result, err := stmt.{{- if .WithContext -}}ExecContext(ctx, {{ else }}Exec({{ end }}args)
+    if err != nil {
+        {{- if .IsTx -}}
         if rbe := b.tx.Rollback(); rbe != nil {
             return nil, rbe
         }
-        return nil, err
-    } else {
-        return result, nil
-    }
-    {{- else -}}
-    stmt, err := b.db.PrepareNamed(
-        `{{ index .Segments 0 }}`)
-    if err != nil {
+        {{ end }}
         return nil, err
     }
-    return stmt.Exec(args)
-    {{- end }}
+
+    return result, nil
 }

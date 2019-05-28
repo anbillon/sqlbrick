@@ -13,7 +13,7 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-//go:generate sqlbrick -w ./sqb/ -o ./models/
+//go:generate sqlbrick gen -w ./sqb/ -o ./models/ -c true
 func main() {
 	db, err := sqlx.Connect("sqlite3", "./example.db")
 	if err != nil {

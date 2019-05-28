@@ -4,9 +4,9 @@
 {{ .Comment }}
 {{- end }}
 {{ if .IsTx -}}
-func (b *{{ .BrickName }}BrickTx){{ .FuncName }}({{ .ArgName }} interface{}) (int64, error) {
+func (b *{{ .BrickName }}BrickTx){{ .FuncName }}({{- if .WithContext -}}ctx context.Context, {{ end }}{{ .ArgName }} interface{}) (int64, error) {
 {{- else -}}
-func (b *{{ .BrickName }}Brick){{ .FuncName }}({{ .ArgName }} interface{}) (int64, error) {
+func (b *{{ .BrickName }}Brick){{ .FuncName }}({{- if .WithContext -}}ctx context.Context, {{ end }}{{ .ArgName }} interface{}) (int64, error) {
 {{- end -}}
     {{- $query := index .Segments 0 -}}
     {{- $len := len $query -}}
@@ -47,7 +47,7 @@ func (b *{{ .BrickName }}Brick){{ .FuncName }}({{ .ArgName }} interface{}) (int6
     }
     {{ end }}
 
-    result, err := stmt.Exec(args)
+    result, err := stmt.{{- if .WithContext -}}ExecContext(ctx, {{ else }}Exec({{ end }}args)
     if err != nil {
     {{- if .IsTx -}}
         if rbe := b.tx.Rollback(); rbe != nil {

@@ -1,6 +1,6 @@
 // Copyright (c) 2018-present Anbillon Team (anbillonteam@gmail.com).
 
-package main
+package internal
 
 import (
 	"testing"
@@ -173,7 +173,7 @@ func TestParserIsCreateDDL(t *testing.T) {
 
 func TestParserLoadSqlFile(t *testing.T) {
 	tests := []string{
-		"../../examples/sqb/book.sqb",
+		"../examples/sqb/book.sqb",
 	}
 
 	for k, v := range tests {

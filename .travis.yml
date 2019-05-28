@@ -15,7 +15,7 @@ script:
   - cd cmd/sqlbrick && go build && go install
 
 after_success:
-  - sqlbrick -help
+  - sqlbrick --help
 
 matrix:
   allow_failures:
