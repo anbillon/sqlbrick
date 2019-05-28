@@ -93,6 +93,10 @@ func (b *UserBrickTx) TxInsert(args *entity.User) (sql.Result, error) {
 	stmt, err := b.tx.PrepareNamed(
 		`INSERT INTO user(name, age) VALUES (:name, :age)`)
 	if err != nil {
+		if rbe := b.tx.Rollback(); rbe != nil {
+			return nil, rbe
+		}
+
 		return nil, err
 	}
 
@@ -115,6 +119,10 @@ func (b *UserBrickTx) TxDelete(id interface{}) (int64, error) {
 
 	stmt, err := b.tx.PrepareNamed(`DELETE FROM user WHERE id := :id`)
 	if err != nil {
+		if rbe := b.tx.Rollback(); rbe != nil {
+			return 0, rbe
+		}
+
 		return 0, err
 	}
 

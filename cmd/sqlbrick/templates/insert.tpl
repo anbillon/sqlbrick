@@ -15,6 +15,11 @@ func (b *{{ .BrickName }}Brick){{ .FuncName }}(args *entity.{{ .BrickName }}) (s
     stmt, err := b.tx.PrepareNamed(
         `{{ index .Segments 0 }}`)
     if err != nil {
+        {{- if .IsTx -}}
+        if rbe := b.tx.Rollback(); rbe != nil {
+            return nil, rbe
+        }
+        {{ end }}
         return nil, err
     }
 
