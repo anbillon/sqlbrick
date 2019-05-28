@@ -20,9 +20,9 @@ require (
 ```
 
 # Usage
-To use sqlbrick, put your SQL statements in `.sql` file. Typically the first statement creates a table. Each SQL file can include only one `CREATE TABLE`. The statement will be a little different from standard SQL statement, it uses `{}` as some simple syntax and `${}` as  placeholder. Other syntax in standard SQL can be used as usual such as comment  `--`. Here's an example:
+To use sqlbrick, put your SQL statements in `.sqb` file. Typically the first statement creates a table. Each SQL file can include only one `CREATE TABLE`. The statement will be a little different from standard SQL statement, it uses `{}` as some simple syntax and `${}` as  placeholder. Other syntax in standard SQL can be used as usual such as comment  `--`. Here's an example:
 
-```sql
+```sqb
 {define name CreateBook}
 CREATE TABLE IF NOT EXISTS book (
   "id"  serial NOT NULL PRIMARY KEY,

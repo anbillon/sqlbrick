@@ -9,6 +9,7 @@ require (
 	github.com/jmoiron/sqlx v1.2.0
 	github.com/mattn/go-sqlite3 v1.9.0
 	github.com/pkg/errors v0.8.1
+	github.com/spf13/cobra v0.0.4
 	github.com/stretchr/testify v1.3.0
 	golang.org/x/tools v0.0.0-20190521203540-521d6ed310dd
 	google.golang.org/appengine v1.6.0 // indirect

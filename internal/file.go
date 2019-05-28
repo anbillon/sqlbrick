@@ -2,7 +2,7 @@
 // This source code is licensed under the MIT license found in the
 // LICENSE file in the root directory of this source tree.
 
-package main
+package internal
 
 import (
 	"io/ioutil"
@@ -13,7 +13,7 @@ import (
 	"github.com/iancoleman/strcase"
 )
 
-func getSqlFiles(dir string) ([]string, error) {
+func GetSqlFiles(dir string) ([]string, error) {
 	var sqlFiles []string
 	files, err := ioutil.ReadDir(dir)
 	if err != nil {
@@ -24,19 +24,19 @@ func getSqlFiles(dir string) ([]string, error) {
 		if value.IsDir() || !strings.HasSuffix(value.Name(), ".sqb") {
 			continue
 		}
-		sqlFiles = append(sqlFiles, filepath.Join(workDir, value.Name()))
+		sqlFiles = append(sqlFiles, filepath.Join(dir, value.Name()))
 	}
 
 	return sqlFiles, nil
 }
 
-func getBrickName(sqlFilePath string) string {
-	bn := getSourceName(sqlFilePath)
+func GetBrickName(sqlFilePath string) string {
+	bn := GetSourceName(sqlFilePath)
 	return strcase.ToCamel(bn)
 }
 
-func getSourceName(sqlFilePath string) string {
-	name := getFileName(sqlFilePath)
+func GetSourceName(sqlFilePath string) string {
+	name := GetFileName(sqlFilePath)
 	dotIndex := strings.LastIndex(name, ".")
 	if dotIndex <= 0 {
 		return ""
@@ -44,7 +44,7 @@ func getSourceName(sqlFilePath string) string {
 	return name[:dotIndex]
 }
 
-func getFileName(sqlFilePath string) string {
+func GetFileName(sqlFilePath string) string {
 	index := strings.LastIndex(sqlFilePath, string(os.PathSeparator))
 	if index <= 0 {
 		return sqlFilePath
