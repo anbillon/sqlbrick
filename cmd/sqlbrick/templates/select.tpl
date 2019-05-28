@@ -17,6 +17,11 @@ func (b *{{ .BrickName }}Brick){{ .FuncName }}(dest interface{}, {{ .ArgName }} 
             `{{ index .Segments 0 }}`)
     {{ end -}}
     if err != nil {
+        {{- if .IsTx -}}
+        if rbe := b.tx.Rollback(); rbe != nil {
+            return rbe
+        }
+        {{ end }}
         return err
     }
 

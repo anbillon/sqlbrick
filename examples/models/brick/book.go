@@ -234,6 +234,10 @@ func (b *BookBrickTx) TxInsert(args *entity.Book) (sql.Result, error) {
 		`INSERT INTO book (uid, name, content, create_time, price)
   VALUES (:uid, :name, :content, :create_time, :price)`)
 	if err != nil {
+		if rbe := b.tx.Rollback(); rbe != nil {
+			return nil, rbe
+		}
+
 		return nil, err
 	}
 
@@ -256,6 +260,10 @@ func (b *BookBrickTx) TxSelect(dest interface{}, uid interface{}) error {
 	stmt, err := b.tx.PrepareNamed(
 		`SELECT COUNT(*) FROM book WHERE uid = :uid`)
 	if err != nil {
+		if rbe := b.tx.Rollback(); rbe != nil {
+			return rbe
+		}
+
 		return err
 	}
 
@@ -281,6 +289,10 @@ func (b *BookBrickTx) TxDeleteById(id interface{}) (int64, error) {
 
 	stmt, err := b.tx.PrepareNamed(`DELETE FROM book WHERE id = :id`)
 	if err != nil {
+		if rbe := b.tx.Rollback(); rbe != nil {
+			return 0, rbe
+		}
+
 		return 0, err
 	}
 
@@ -317,6 +329,10 @@ func (b *BookBrickTx) TxUpdate(args *entity.Book) (int64, error) {
 
 	stmt, err := b.tx.PrepareNamed(conditionQuery)
 	if err != nil {
+		if rbe := b.tx.Rollback(); rbe != nil {
+			return 0, rbe
+		}
+
 		return 0, err
 	}
 

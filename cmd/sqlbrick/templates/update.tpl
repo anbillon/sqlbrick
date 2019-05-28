@@ -53,6 +53,11 @@ func (b *{{ .BrickName }}Brick){{ .FuncName }}(args *entity.{{ .BrickName }}) (i
     {{- end -}}
     {{- end }}
     if err != nil {
+        {{- if .IsTx -}}
+        if rbe := b.tx.Rollback(); rbe != nil {
+            return 0, rbe
+        }
+        {{ end }}
         return 0, err
     }
 
