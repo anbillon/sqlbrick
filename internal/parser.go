@@ -21,6 +21,7 @@ type Parser struct {
 	next         bool
 	newBlock     bool
 	sqlBlocks    []string
+	imports      []string
 	syntaxes     []Syntax
 	definitions  []Statement
 }
@@ -92,6 +93,17 @@ func (p *Parser) appendLine() error {
 	}
 
 	return nil
+}
+
+func (p *Parser) matchImport(line string) (string, bool) {
+	reg := regexp.MustCompile(`{\s*import(.*?)}`)
+	matches := reg.FindStringSubmatch(line)
+
+	if matches == nil || len(matches) <= 1 {
+		return "", false
+	}
+
+	return strings.TrimSpace(matches[1]), true
 }
 
 // matchDefineHead will match {define ...} header
@@ -225,6 +237,7 @@ func (p *Parser) removeComment(block string) string {
 // parseDynamicQueries will parse definition for sql statement
 func (p *Parser) parseDefinition() (*Definition, error) {
 	nameRegex := regexp.MustCompile(`name (.*)`)
+	paramTypeRegex := regexp.MustCompile(`paramType (.*)`)
 	mapperRegex := regexp.MustCompile(`mapper (.*)`)
 	txRegex := regexp.MustCompile(`tx (true|false)`)
 	var definition Definition
@@ -247,22 +260,40 @@ func (p *Parser) parseDefinition() (*Definition, error) {
 	tags := strings.Split(definitionHead, ",")
 	for _, value := range tags {
 		nm := nameRegex.FindStringSubmatch(value)
+		pm := paramTypeRegex.FindStringSubmatch(value)
 		mm := mapperRegex.FindStringSubmatch(value)
 		tm := txRegex.FindStringSubmatch(value)
-		if nm != nil && mm != nil {
+		if nm != nil && (pm != nil || mm != nil || tm != nil) {
 			return nil, errors.Errorf("definition format error:\n%v ", block)
 		}
+
+		// parse func name
 		if nm != nil && len(nm) >= 2 {
 			left = strings.Replace(left, value, "", 1)
 			definition.Name = strings.TrimSpace(nm[1])
 		}
+
+		//parse parameter
+		if pm != nil && len(pm) >= 2 {
+			left = strings.Replace(left, value, "", 1)
+			types, err := p.parseArgTypes(strings.TrimSpace(pm[1]))
+			if err != nil {
+				return nil, errors.Errorf("param error: %v in\n%v\n", err, block)
+			}
+			definition.ArgTypes = types
+		}
+
+		// parse mapper
 		if mm != nil && len(mm) >= 2 {
 			left = strings.Replace(left, value, "", 1)
-			definition.Mapper = mappers[strings.TrimSpace(mm[1])]
-			if definition.Mapper == MapperDefault {
-				return nil, errors.Errorf("error mapper type %v\n", block)
+			mapper, err := p.parseTypeDetail(strings.TrimSpace(mm[1]))
+			if err != nil {
+				return nil, errors.Errorf("mapper error: %v in %v\n", err, block)
 			}
+			definition.Mapper = mapper
 		}
+
+		// parse transaction
 		if tm != nil && len(tm) >= 1 {
 			left = strings.Replace(left, value, "", 1)
 			definition.IsTx = true
@@ -277,11 +308,102 @@ func (p *Parser) parseDefinition() (*Definition, error) {
 		return nil, errors.Errorf("no name definition found:\n %v", block)
 	}
 
-	if definition.Mapper == MapperDefault {
-		definition.Mapper = MapperArray
+	if definition.ArgTypes == nil {
+		definition.ArgTypes = []TypeDetail{{
+			Name: "interface{}",
+			Type: DataStruct,
+		}}
+	}
+
+	if definition.Mapper == nil {
+		definition.Mapper = &TypeDetail{
+			Name: "interface{}",
+			Type: DataArray,
+		}
 	}
 
 	return &definition, nil
+}
+
+func (p *Parser) parseArgTypes(names string) ([]TypeDetail, error) {
+	var details []TypeDetail
+
+	nameArr := strings.Split(names, " ")
+	if len(nameArr) == 1 {
+		name := nameArr[0]
+		var dataType DataType
+		if p.isprimitiveType(name) {
+			dataType = DataPrimitive
+		} else if p.isArray(name) {
+			return nil, errors.New("argument type cannot be array")
+		} else {
+			dataType = DataStruct
+		}
+		details = append(details, TypeDetail{
+			Name: name,
+			Type: dataType,
+		})
+	} else {
+		statement := strings.Replace(p.currentBlock, ";", "", -1)
+		args, _, err := p.parsePlaceholder(statement)
+		if err != nil {
+			return nil, err
+		}
+		if len(nameArr) != len(args) {
+			return nil, errors.New("the size of type is not equal to argument")
+		}
+
+		for _, v := range nameArr {
+			d, err := p.parseTypeDetail(v)
+			if err != nil {
+				return nil, err
+			}
+			details = append(details, *d)
+		}
+	}
+
+	return details, nil
+}
+
+func (p *Parser) parseTypeDetail(name string) (*TypeDetail, error) {
+	if p.isArray(name) {
+		return &TypeDetail{
+			Name: name,
+			Type: DataArray,
+		}, nil
+	}
+
+	if p.isprimitiveType(name) {
+		return &TypeDetail{
+			Name: name,
+			Type: DataPrimitive,
+		}, nil
+	}
+
+	if name == "inerface" {
+		return &TypeDetail{
+			Name: name + "{}",
+			Type: DataArray,
+		}, nil
+	}
+
+	return &TypeDetail{
+		Name: name,
+		Type: DataStruct,
+	}, nil
+}
+
+func (p *Parser) isprimitiveType(name string) bool {
+	return name == "int" || name == "int8" || name == "int16" || name == "int32" ||
+		name == "int64" || name == "uint" || name == "uint8" || name == "uint16" ||
+		name == "uint32" || name == "uint64" || name == "float32" ||
+		name == "float64" || name == "string" || name == "bool"
+}
+
+func (p *Parser) isArray(name string) bool {
+	reg := regexp.MustCompile(`\[][^ ]+`)
+	matches := reg.FindStringSubmatch(name)
+	return matches != nil && len(matches) == 1
 }
 
 // parsePlaceholder parse queries's placeholder to sql that sqlx can execute.
@@ -529,12 +651,12 @@ func (p *Parser) isCreateDDL(block string) bool {
 	return strings.TrimSpace(matches[1]) == "CREATE"
 }
 
-// LoadSqlFile will load a sql file with given path and split it into
+// LoadSqbFile will load a sqb file with given path and split it into
 // different part for database usage, such as DDL and CURD.
-func (p *Parser) LoadSqlFile(sqlFilePath string) ([]Statement, []Syntax, error) {
+func (p *Parser) LoadSqbFile(sqlFilePath string) ([]Statement, []Syntax, []string, error) {
 	f, err := os.Open(sqlFilePath)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 	defer f.Close()
 
@@ -542,6 +664,11 @@ func (p *Parser) LoadSqlFile(sqlFilePath string) ([]Statement, []Syntax, error) 
 	for scanner.Scan() {
 		p.line = scanner.Text()
 		if len(strings.TrimSpace(p.line)) == 0 {
+			continue
+		}
+
+		if imp, ok := p.matchImport(p.line); ok {
+			p.imports = append(p.imports, imp)
 			continue
 		}
 
@@ -556,14 +683,14 @@ func (p *Parser) LoadSqlFile(sqlFilePath string) ([]Statement, []Syntax, error) 
 		}
 
 		if err := p.appendLine(); err != nil {
-			return nil, nil, err
+			return nil, nil, nil, err
 		}
 	}
 
 	// walk all blocks to parse
 	if err := p.parseSqlBlocks(); err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 
-	return p.definitions, p.syntaxes, nil
+	return p.definitions, p.syntaxes, p.imports, nil
 }

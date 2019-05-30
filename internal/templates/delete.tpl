@@ -4,9 +4,9 @@
 {{ .Comment }}
 {{- end }}
 {{ if .IsTx -}}
-func (b *{{ .BrickName }}BrickTx){{ .FuncName }}({{- if .WithContext -}}ctx context.Context, {{ end }}{{ .ArgName }} interface{}) (int64, error) {
+func (b *{{ .BrickName }}BrickTx){{ .FuncName }}({{- if .WithContext -}}ctx context.Context, {{ end }}{{ .ArgsExp }}) (int64, error) {
 {{- else -}}
-func (b *{{ .BrickName }}Brick){{ .FuncName }}({{- if .WithContext -}}ctx context.Context, {{ end }}{{ .ArgName }} interface{}) (int64, error) {
+func (b *{{ .BrickName }}Brick){{ .FuncName }}({{- if .WithContext -}}ctx context.Context, {{ end }}{{ .ArgsExp }}) (int64, error) {
 {{- end -}}
     {{- $query := index .Segments 0 -}}
     {{- $len := len $query -}}
@@ -38,7 +38,7 @@ func (b *{{ .BrickName }}Brick){{ .FuncName }}({{- if .WithContext -}}ctx contex
         return 0, err
     }
 
-    {{ if eq .TotalArgs 1 -}}
+    {{ if ge .TotalArgs 1 -}}
     // create map arguments for sqlx
     args := map[string]interface{}{
     {{- range $k, $v := .Args }}

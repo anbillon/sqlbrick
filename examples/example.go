@@ -34,32 +34,32 @@ func main() {
 		log.Printf("insert error: %v", err)
 	}
 
-	var books []entity.Book
+	var books []entity.CustomBook
 	if err := sqlBrick.Book.SelectAll(&books); err != nil {
-		log.Printf("error: %v", err)
+		log.Printf("select custom error: %v", err)
 	} else {
-		log.Printf("select all: %v", books)
+		log.Printf("select custom all: %v", books)
 	}
 
 	var book entity.Book
-	if err := sqlBrick.Book.SelectById(&book, 25); err != nil {
-		log.Printf("wrong: %v", err)
+	if err := sqlBrick.Book.SelectById(&book, 1, 1324); err != nil {
+		log.Printf("select by id wrong: %v", err)
 	} else {
 		log.Printf("select by id: %v", book)
 	}
 
 	var count int
 	if err := sqlBrick.Book.CountBooks(&count, 1324); err != nil {
-		log.Printf("wrror: %v", err)
+		log.Printf("select count wrong: %v", err)
 	} else {
 		log.Printf("select count: %v", count)
 	}
 
 	var booksx []entity.Book
 	if err := sqlBrick.Book.SelectByUid(&booksx, 1324); err != nil {
-		log.Printf("wrong: %v", err)
+		log.Printf("select by uid wrong: %v", err)
 	} else {
-		log.Printf("select by id: %v", booksx)
+		log.Printf("select by uid: %v", booksx)
 	}
 
 	if _, err := sqlBrick.Book.DeleteById(26); err != nil {
