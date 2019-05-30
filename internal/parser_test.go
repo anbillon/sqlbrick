@@ -99,6 +99,25 @@ func TestParseDefinition(t *testing.T) {
 	}
 }
 
+func TestParserParseMapper(t *testing.T) {
+	tests := []string{
+		"int",
+		"entity.Book",
+		"[]string",
+	}
+
+	for k, v := range tests {
+		mapper, _ := parser.parseMapper(v)
+		if k == 0 {
+			assert.Equal(t, MapperBasic, mapper.Type)
+		} else if k == 1 {
+			assert.Equal(t, MapperStruct, mapper.Type)
+		} else {
+			assert.Equal(t, MapperArray, mapper.Type)
+		}
+	}
+}
+
 func TestParserParseComment(t *testing.T) {
 	tests := []string{
 		`-- This is a comment example.`,
@@ -177,7 +196,7 @@ func TestParserLoadSqlFile(t *testing.T) {
 	}
 
 	for k, v := range tests {
-		_, _, err := parser.LoadSqlFile(v)
+		_, _, _, err := parser.LoadSqbFile(v)
 		if k == 0 {
 			assert.NoError(t, err)
 		} else {

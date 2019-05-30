@@ -22,6 +22,6 @@ func newVersionCmd() *cobra.Command {
 func runVersion(_ *cobra.Command, _ []string) {
 	fmt.Printf(`SQLBrick:
  Version:       %v
- Go version:    %v`,
-		version, runtime.Version())
+ Go version:    %v
+`, version, runtime.Version())
 }

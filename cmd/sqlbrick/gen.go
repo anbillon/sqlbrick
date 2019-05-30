@@ -17,6 +17,7 @@ var (
 	workDir     string
 	outputDir   string
 	withContext bool
+	currentDir  string
 )
 
 func newGenerateCmd() *cobra.Command {
@@ -31,22 +32,25 @@ func newGenerateCmd() *cobra.Command {
 }
 
 func initFlags(cmd *cobra.Command) {
-	dir, err := os.Getwd()
+	var err error
+	currentDir, err = os.Getwd()
 	if err != nil {
 		log.Fatalf("%v", err)
 	}
 
-	cmd.Flags().StringVarP(&workDir, "work-dir", "w", dir,
-		fmt.Sprintf(`The work directory to search sql files (default "%v")`, dir))
-	cmd.Flags().StringVarP(&outputDir, "output-dir", "o", "",
-		"The output directory of generated source code")
+	cmd.Flags().StringVarP(&workDir, "work-dir", "w", currentDir,
+		fmt.Sprintf(`The work directory to search sql files (default "%v")`,
+			currentDir))
+	cmd.Flags().StringVarP(&outputDir, "output-dir", "o", currentDir,
+		fmt.Sprintf(`The output directory of generated source code (default "%v")`,
+			currentDir))
 	cmd.Flags().BoolVarP(&withContext, "with-context", "c", false,
 		"Should SQLBrick support context or not (default false)")
 }
 
 func runGeneration(_ *cobra.Command, _ []string) error {
 	if len(outputDir) == 0 {
-		outputDir = workDir
+		outputDir = currentDir
 	}
 
 	var err error
@@ -66,7 +70,7 @@ func runGeneration(_ *cobra.Command, _ []string) error {
 			b := internal.GetBrickName(value)
 			bricks = append(bricks, b)
 			p := internal.NewParser()
-			statements, syntaxes, err := p.LoadSqlFile(value)
+			statements, syntaxes, imports, err := p.LoadSqbFile(value)
 			if err != nil {
 				log.Fatalf("parse sql file fail: %s", err)
 				break
@@ -84,7 +88,7 @@ func runGeneration(_ *cobra.Command, _ []string) error {
 				txMap[b] = hasTx
 			}
 
-			genFromSql(g, b, inputFileName, outputFileName, statements, syntaxes)
+			genBrickFuncs(g, b, inputFileName, outputFileName, statements, syntaxes, imports)
 		}
 
 		bricksGen := internal.NewGenerator(filepath.Join(outputDir, "brick"), "brick")
@@ -100,10 +104,11 @@ func runGeneration(_ *cobra.Command, _ []string) error {
 	return nil
 }
 
-func genFromSql(g *internal.Generator, brickName string, sourceFilename string,
-	outputFilename string, statements []internal.Statement, syntaxes []internal.Syntax) {
+func genBrickFuncs(g *internal.Generator, brickName string, sourceFilename string,
+	outputFilename string, statements []internal.Statement,
+	syntaxes []internal.Syntax, imports []string) {
 	g.Header(sourceFilename)
-	g.GenerateBrick(sourceFilename, brickName, syntaxes, statements)
+	g.GenerateBrick(sourceFilename, brickName, syntaxes, statements, imports)
 	for _, value := range statements {
 		g.GenerateSqlFunc(brickName, withContext, value)
 	}

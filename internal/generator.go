@@ -55,7 +55,7 @@ type SqlFunc struct {
 	Conditions   []Condition
 	RemoveComma  bool
 	IndexOfWhere int
-	Mapper       MapperType
+	Mapper       Mapper
 	IsTx         bool
 	ArgName      string
 	Args         []string
@@ -171,7 +171,7 @@ func (g *Generator) GenerateEntity(sourceFilename string, outputFilename string,
 
 // GenerateBrick will add brick definition into the generator buffer.
 func (g *Generator) GenerateBrick(sourceFilename string, brick string,
-	syntaxes []Syntax, statements []Statement) {
+	syntaxes []Syntax, statements []Statement, imports []string) {
 	hasTxStatement := g.CheckTx(statements)
 
 	if err := g.applyTemplate(brickTemplate, struct {
@@ -179,11 +179,13 @@ func (g *Generator) GenerateBrick(sourceFilename string, brick string,
 		BrickName      string
 		HasTx          bool
 		Syntaxes       []Syntax
+		Imports        []string
 	}{
 		SourceFilename: sourceFilename,
 		BrickName:      brick,
 		HasTx:          hasTxStatement,
 		Syntaxes:       syntaxes,
+		Imports:        imports,
 	}); err != nil {
 		log.Printf("error: %v", err)
 	}
@@ -213,7 +215,7 @@ func (g *Generator) GenerateSqlFunc(brickName string, withContext bool,
 		Conditions:   dynamicQuery.Conditions,
 		IndexOfWhere: dynamicQuery.IndexOfWhere,
 		RemoveComma:  dynamicQuery.RemoveLastComma,
-		Mapper:       definition.Mapper,
+		Mapper:       *definition.Mapper,
 		IsTx:         definition.IsTx,
 		Args:         dynamicQuery.Args,
 		ArgName:      argName,

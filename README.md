@@ -3,10 +3,10 @@ sqlbrick
 
 [![Build Status](https://travis-ci.org/anbillon/sqlbrick.svg?branch=develop)](https://travis-ci.org/Tourbillon/sqlbrick) [![license](http://img.shields.io/badge/license-MIT-red.svg?style=flat)](https://raw.githubusercontent.com/Tourbillon/sqlbrick/master/LICENSE)
 
-SQLBrick generates golang function from your SQL statements. It's not another orm library, but a tool to generate golang function and models from given SQL files. The generated source code is totally based on  [sqlx][1]. 
+SQLBrick generates golang function from your SQL statements. It's not another ORM library, but a tool to generate golang function from given SQL template files. The generated source code is totally based on  [sqlx][1]. 
 
 # Why this
-As metioned above, this is not an orm library. If you are looking for some orm library in go, this is not suitable for you. If you like to write SQL statements, but you don't want to write SQL function again and again, then this tool will help you to reduce workload.
+As mentioned above, this is not an ORM library. If you like to write SQL statements, but you don't want to write SQL function again and again, then this tool will help you to reduce workload.
 
 # Install
 ```shell
@@ -23,6 +23,8 @@ require (
 To use sqlbrick, put your SQL statements in `.sqb` file. Typically the first statement creates a table. Each SQL file can include only one `CREATE TABLE`. The statement will be a little different from standard SQL statement, it uses `{}` as some simple syntax and `${}` as  placeholder. Other syntax in standard SQL can be used as usual such as comment  `--`. Here's an example:
 
 ```sqb
+{import github.com/anbillon/sqlbrick/examples/models/entity}
+
 {define name CreateBook}
 CREATE TABLE IF NOT EXISTS book (
   "id"  serial NOT NULL PRIMARY KEY,
@@ -54,16 +56,16 @@ UPDATE book SET price=(SELECT price FROM book, user WHERE book.uid=user.id)
   WHERE book.price <= ${price} AND name = ${name};
 {end define}
 
-{define name SelectAll}
+{define name SelectAll, mapper []entity.Book}
 SELECT * FROM book;
 {end define}
 
 -- An example to show SelectById.
-{define name SelectById, mapper single}
+{define name SelectById, mapper entity.Book}
 SELECT * FROM book WHERE id = ${id} ORDER BY name ASC;
 {end define}
 
-{define name SelectByUid, mapper array}
+{define name SelectByUid, mapper entity.Book}
 SELECT * FROM book WHERE uid = ${uid} ORDER BY name ASC;
 {end define}
 
@@ -81,26 +83,28 @@ INSERT INTO book (uid, name, content, create_time, price)
 DELETE FROM book WHERE id = ${id};
 {end define}
 ```
-Go to your work directory where contains `.sql` files, then run:
+Go to your work directory where contains `.sqb` files, then run:
 ```shel
-$ sqlbrick
+$ sqlbrick gen
 ```
-Or you can specify the directory of sql files. For more usage, check
+Or you can specify the directory of sqb files. For more usage, check
 ```shell
-$ sqlbrick -help
+$ sqlbrick --help
 ```
 You  can also use SQLBrick with `go generate`, just add the following somewhere in your source code and then run `go generate`:
 ```text
-//go:generate sqlbrick -w your/sql/dir -o output/dir
+//go:generate sqlbrick gen -w your/sqb/dir -o output/dir
 ```
 
-From this sqlbrick will generate `sqlbrick.go`, `book.go`. You'll see all SQL function in `book.go` and `Book` model. At finally, you can use them in your code.
+From this sqlbrick will generate `sqlbrick.go`, `book.go`. You'll see all SQL function in `book.go`. At finally, you can use them in your code.
 ```go
 import (
 	"log"
 	
 	"github.com/jmoiron/sqlx"
 	_"github.com/lib/pq"
+	"your/path/brick"
+	"your/path/entity"
 )
 
 func main() {
@@ -108,9 +112,9 @@ func main() {
 	if err != nil {
 		log.Fatalln(err)
 	}
-	sqlBrick := models.NewSqlBrick(db)
+	sqlBrick := brick.NewSqlBrick(db)
 
-	var books []Book
+	var books []entity.Book
 	err := sqlBrick.Book.SelectById(&books, "someid")
 	if err != nil {
 		log.Printf("error: %v", err)
@@ -123,16 +127,22 @@ The value in placeholder should keep the same with SQL field, or the same with y
 
 # Syntax
 
+### Import
+SQLBrick allows to import custom type so the mapper can use them:
+```sqb
+{import github.com/anbillon/sqlbrick/examples/models/entity}
+```
+
 ### Definition
 SQLBrick uses `{define ...}...{end define}` to define a SQL function:
-```sql
-{define name SelectById, mapper single}
+```sqb
+{define name SelectById, mapper int}
 ....
 {end define}
 ```
-Definition has there parameters, `name`,  `mapper` and `tx`, they must be split by `,`. 
+Definition has three parameters, `name`,  `mapper` and `tx`, they must be split by `,`. 
 * The `name` is necessary to define the name of current SQL function.
-* The `mapper` is optional, default is `array` which means the result will map to an array. If you want to map to only one result, then use `single`. If you want to map to basic type, then use `basicType`(ps: this should be based on your query result).
+* The `mapper` is optional, default is `interface` which means the result will map to an array. If you want to map to only one result, then use `import` to import it, and use it as golang (for example: `entity.Book`). If you want to map to basic type, just use the type in golang (such as `int`, `string`, `float32`, `bool` and so on. ps: this should be based on your query result).
 * The `tx` is optional, default is `false`. If set `true`, the SQL function will work in a transaction. Consuming the generated code like this:
 ```go
 ...

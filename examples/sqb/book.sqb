@@ -1,3 +1,5 @@
+{import github.com/anbillon/sqlbrick/examples/models/entity}
+
 -- Create table if not exsited
 {define name CreateBook}
 CREATE TABLE IF NOT EXISTS book (
@@ -32,20 +34,20 @@ UPDATE book SET price=(SELECT price FROM book, user WHERE book.uid=user.id)
   WHERE book.price <= ${price} AND name = ${name};
 {end define}
 
-{define name SelectAll}
+{define name SelectAll, mapper []entity.CustomBook}
 SELECT * FROM book;
 {end define}
 
-{define name CountBooks, mapper basicType}
+{define name CountBooks, mapper int}
 SELECT COUNT(*) FROM book WHERE uid = ${uid};
 {end define}
 
 -- An example to show SelectById.
-{define name SelectById, mapper single}
-SELECT * FROM book WHERE id = ${id} ORDER BY name ASC;
+{define name SelectById}
+SELECT * FROM book WHERE id = ${id};
 {end define}
 
-{define name SelectByUid, mapper array}
+{define name SelectByUid}
 SELECT * FROM book WHERE uid = ${uid} ORDER BY name ASC;
 {end define}
 
@@ -63,7 +65,7 @@ INSERT INTO book (uid, name, content, create_time, price)
   VALUES (${uid}, ${name}, ${content}, ${create_time}, ${price});
 {end define}
 
-{define name TxSelect, mapper basicType, tx true}
+{define name TxSelect, mapper int, tx true}
 SELECT COUNT(*) FROM book WHERE uid = ${uid};
 {end define}
 

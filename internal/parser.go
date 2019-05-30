@@ -21,6 +21,7 @@ type Parser struct {
 	next         bool
 	newBlock     bool
 	sqlBlocks    []string
+	imports      []string
 	syntaxes     []Syntax
 	definitions  []Statement
 }
@@ -92,6 +93,17 @@ func (p *Parser) appendLine() error {
 	}
 
 	return nil
+}
+
+func (p *Parser) matchImport(line string) (string, bool) {
+	reg := regexp.MustCompile(`{\s*import(.*?)}`)
+	matches := reg.FindStringSubmatch(line)
+
+	if matches == nil || len(matches) <= 1 {
+		return "", false
+	}
+
+	return strings.TrimSpace(matches[1]), true
 }
 
 // matchDefineHead will match {define ...} header
@@ -258,10 +270,11 @@ func (p *Parser) parseDefinition() (*Definition, error) {
 		}
 		if mm != nil && len(mm) >= 2 {
 			left = strings.Replace(left, value, "", 1)
-			definition.Mapper = mappers[strings.TrimSpace(mm[1])]
-			if definition.Mapper == MapperDefault {
-				return nil, errors.Errorf("error mapper type %v\n", block)
+			mapper, err := p.parseMapper(strings.TrimSpace(mm[1]))
+			if err != nil {
+				return nil, errors.Errorf("mapper error: %v in %v\n", err, block)
 			}
+			definition.Mapper = mapper
 		}
 		if tm != nil && len(tm) >= 1 {
 			left = strings.Replace(left, value, "", 1)
@@ -277,11 +290,51 @@ func (p *Parser) parseDefinition() (*Definition, error) {
 		return nil, errors.Errorf("no name definition found:\n %v", block)
 	}
 
-	if definition.Mapper == MapperDefault {
-		definition.Mapper = MapperArray
+	if definition.Mapper == nil {
+		definition.Mapper = &Mapper{
+			Name: "interface{}",
+			Type: MapperArray,
+		}
 	}
 
 	return &definition, nil
+}
+
+func (p *Parser) parseMapper(name string) (*Mapper, error) {
+	reg := regexp.MustCompile(`\[][^ ]+`)
+	matches := reg.FindStringSubmatch(name)
+	if matches != nil {
+		if len(matches) > 1 {
+			return nil, errors.New("invalid maper type")
+		}
+
+		return &Mapper{
+			Name: name,
+			Type: MapperArray,
+		}, nil
+	}
+
+	if name == "int" || name == "int8" || name == "int16" || name == "int32" ||
+		name == "int64" || name == "uint" || name == "uint8" || name == "uint16" ||
+		name == "uint32" || name == "uint64" || name == "float32" ||
+		name == "float64" || name == "string" || name == "bool" {
+		return &Mapper{
+			Name: name,
+			Type: MapperBasic,
+		}, nil
+	}
+
+	if name == "inerface" {
+		return &Mapper{
+			Name: name + "{}",
+			Type: MapperArray,
+		}, nil
+	}
+
+	return &Mapper{
+		Name: name,
+		Type: MapperStruct,
+	}, nil
 }
 
 // parsePlaceholder parse queries's placeholder to sql that sqlx can execute.
@@ -529,12 +582,12 @@ func (p *Parser) isCreateDDL(block string) bool {
 	return strings.TrimSpace(matches[1]) == "CREATE"
 }
 
-// LoadSqlFile will load a sql file with given path and split it into
+// LoadSqbFile will load a sqb file with given path and split it into
 // different part for database usage, such as DDL and CURD.
-func (p *Parser) LoadSqlFile(sqlFilePath string) ([]Statement, []Syntax, error) {
+func (p *Parser) LoadSqbFile(sqlFilePath string) ([]Statement, []Syntax, []string, error) {
 	f, err := os.Open(sqlFilePath)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 	defer f.Close()
 
@@ -542,6 +595,11 @@ func (p *Parser) LoadSqlFile(sqlFilePath string) ([]Statement, []Syntax, error) 
 	for scanner.Scan() {
 		p.line = scanner.Text()
 		if len(strings.TrimSpace(p.line)) == 0 {
+			continue
+		}
+
+		if imp, ok := p.matchImport(p.line); ok {
+			p.imports = append(p.imports, imp)
 			continue
 		}
 
@@ -556,14 +614,14 @@ func (p *Parser) LoadSqlFile(sqlFilePath string) ([]Statement, []Syntax, error) 
 		}
 
 		if err := p.appendLine(); err != nil {
-			return nil, nil, err
+			return nil, nil, nil, err
 		}
 	}
 
 	// walk all blocks to parse
 	if err := p.parseSqlBlocks(); err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 
-	return p.definitions, p.syntaxes, nil
+	return p.definitions, p.syntaxes, p.imports, nil
 }

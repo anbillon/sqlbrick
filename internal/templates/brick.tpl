@@ -6,6 +6,9 @@ import (
 
     "github.com/anbillon/sqlbrick/typex"
     "github.com/jmoiron/sqlx"
+    {{- range $k, $v := .Imports }}
+    "{{ $v }}"
+    {{- end }}
 )
 
 // Type definition for {{ .BrickName }}Brick. This brick will contains all database

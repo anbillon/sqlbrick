@@ -34,7 +34,7 @@ func main() {
 		log.Printf("insert error: %v", err)
 	}
 
-	var books []entity.Book
+	var books []entity.CustomBook
 	if err := sqlBrick.Book.SelectAll(&books); err != nil {
 		log.Printf("error: %v", err)
 	} else {
