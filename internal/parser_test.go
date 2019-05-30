@@ -99,6 +99,45 @@ func TestParseDefinition(t *testing.T) {
 	}
 }
 
+func TestParserParseParamType(t *testing.T) {
+	tests := []string{
+		"int int",
+		"[]int",
+		"entity.CustomBook",
+	}
+
+	for k, v := range tests {
+		parser.currentBlock = "SELECT * FROM book WHERE id = ${id} and uid = ${uid};"
+		types, err := parser.parseArgTypes(v)
+		if k == 0 {
+			assert.Equal(t, 2, len(types))
+		} else if k == 1 {
+			assert.Error(t, err)
+		} else {
+			assert.Equal(t, 1, len(types))
+		}
+	}
+}
+
+func TestParseTypeDetail(t *testing.T) {
+	tests := []string{
+		"int",
+		"entity.Book",
+		"[]string",
+	}
+
+	for k, v := range tests {
+		detail, _ := parser.parseTypeDetail(v)
+		if k == 0 {
+			assert.Equal(t, DataPrimitive, detail.Type)
+		} else if k == 1 {
+			assert.Equal(t, DataStruct, detail.Type)
+		} else {
+			assert.Equal(t, DataArray, detail.Type)
+		}
+	}
+}
+
 func TestParserParseComment(t *testing.T) {
 	tests := []string{
 		`-- This is a comment example.`,
@@ -177,7 +216,7 @@ func TestParserLoadSqlFile(t *testing.T) {
 	}
 
 	for k, v := range tests {
-		_, _, err := parser.LoadSqlFile(v)
+		_, _, _, err := parser.LoadSqbFile(v)
 		if k == 0 {
 			assert.NoError(t, err)
 		} else {

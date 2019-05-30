@@ -1,3 +1,5 @@
+{import github.com/anbillon/sqlbrick/examples/models/entity}
+
 -- Create table if not exsited
 {define name CreateBook}
 CREATE TABLE IF NOT EXISTS book (
@@ -32,29 +34,29 @@ UPDATE book SET price=(SELECT price FROM book, user WHERE book.uid=user.id)
   WHERE book.price <= ${price} AND name = ${name};
 {end define}
 
-{define name SelectAll}
-SELECT * FROM book;
+{define name SelectAll, mapper []entity.CustomBook}
+SELECT id, uid, name, content FROM book;
 {end define}
 
-{define name CountBooks, mapper basicType}
+{define name CountBooks, mapper int}
 SELECT COUNT(*) FROM book WHERE uid = ${uid};
 {end define}
 
 -- An example to show SelectById.
-{define name SelectById, mapper single}
-SELECT * FROM book WHERE id = ${id} ORDER BY name ASC;
+{define name SelectById, paramType int int,  mapper entity.Book}
+SELECT * FROM book WHERE id = ${id} and uid = ${uid};
 {end define}
 
-{define name SelectByUid, mapper array}
+{define name SelectByUid}
 SELECT * FROM book WHERE uid = ${uid} ORDER BY name ASC;
 {end define}
 
 -- An example to show DeleteById.
-{define name DeleteById}
+{define name DeleteById, paramType int}
 DELETE FROM book WHERE id = ${id};
 {end define}
 
-{define name DeleteByIdAndUid}
+{define name DeleteByIdAndUid, paramType int int}
 DELETE FROM book WHERE id = ${id} and uid = ${uid};
 {end define}
 
@@ -63,7 +65,7 @@ INSERT INTO book (uid, name, content, create_time, price)
   VALUES (${uid}, ${name}, ${content}, ${create_time}, ${price});
 {end define}
 
-{define name TxSelect, mapper basicType, tx true}
+{define name TxSelect, mapper int, tx true}
 SELECT COUNT(*) FROM book WHERE uid = ${uid};
 {end define}
 

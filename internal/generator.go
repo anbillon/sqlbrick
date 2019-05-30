@@ -49,19 +49,21 @@ type Generator struct {
 
 // Type definition for sql functions used to generate sql func.
 type SqlFunc struct {
-	BrickName    string
-	FuncName     string
-	Segments     []string
-	Conditions   []Condition
-	RemoveComma  bool
-	IndexOfWhere int
-	Mapper       MapperType
-	IsTx         bool
-	ArgName      string
-	Args         []string
-	TotalArgs    int
-	Comment      string
-	WithContext  bool
+	BrickName      string
+	FuncName       string
+	Segments       []string
+	Conditions     []Condition
+	RemoveComma    bool
+	IndexOfWhere   int
+	ArgTypes       []TypeDetail
+	TotalArgeTypes int
+	Mapper         TypeDetail
+	IsTx           bool
+	ArgsExp        string
+	Args           []string
+	TotalArgs      int
+	Comment        string
+	WithContext    bool
 }
 
 // NewGenerator create a new Generator with output dir and package name.
@@ -171,7 +173,7 @@ func (g *Generator) GenerateEntity(sourceFilename string, outputFilename string,
 
 // GenerateBrick will add brick definition into the generator buffer.
 func (g *Generator) GenerateBrick(sourceFilename string, brick string,
-	syntaxes []Syntax, statements []Statement) {
+	syntaxes []Syntax, statements []Statement, imports []string) {
 	hasTxStatement := g.CheckTx(statements)
 
 	if err := g.applyTemplate(brickTemplate, struct {
@@ -179,11 +181,13 @@ func (g *Generator) GenerateBrick(sourceFilename string, brick string,
 		BrickName      string
 		HasTx          bool
 		Syntaxes       []Syntax
+		Imports        []string
 	}{
 		SourceFilename: sourceFilename,
 		BrickName:      brick,
 		HasTx:          hasTxStatement,
 		Syntaxes:       syntaxes,
+		Imports:        imports,
 	}); err != nil {
 		log.Printf("error: %v", err)
 	}
@@ -200,26 +204,41 @@ func (g *Generator) GenerateSqlFunc(brickName string, withContext bool,
 		log.Printf("no template found for given query:\n %v", dynamicQuery.Segments)
 		return
 	}
-	var argName = "args"
-	argsLen := dynamicQuery.Args
-	if len(argsLen) == 1 {
-		argName = dynamicQuery.Args[0]
+
+	var argsExp = ""
+	argTypesLen := len(definition.ArgTypes)
+	if argTypesLen == 1 {
+		argsExp = "args"
+		if len(dynamicQuery.Args) == 1 {
+			argsExp = dynamicQuery.Args[0]
+		}
+		argsExp += " " + definition.ArgTypes[0].Name
+	} else {
+		for k, v := range definition.ArgTypes {
+			argName := dynamicQuery.Args[k]
+			argsExp += argName + " " + v.Name
+			if k < argTypesLen {
+				argsExp += ", "
+			}
+		}
 	}
 
 	if err := g.applyTemplate(tpl, SqlFunc{
-		BrickName:    brickName,
-		FuncName:     definition.Name,
-		Segments:     dynamicQuery.Segments,
-		Conditions:   dynamicQuery.Conditions,
-		IndexOfWhere: dynamicQuery.IndexOfWhere,
-		RemoveComma:  dynamicQuery.RemoveLastComma,
-		Mapper:       definition.Mapper,
-		IsTx:         definition.IsTx,
-		Args:         dynamicQuery.Args,
-		ArgName:      argName,
-		TotalArgs:    len(dynamicQuery.Args),
-		Comment:      statement.Comment,
-		WithContext:  withContext,
+		BrickName:      brickName,
+		FuncName:       definition.Name,
+		Segments:       dynamicQuery.Segments,
+		Conditions:     dynamicQuery.Conditions,
+		IndexOfWhere:   dynamicQuery.IndexOfWhere,
+		RemoveComma:    dynamicQuery.RemoveLastComma,
+		ArgTypes:       definition.ArgTypes,
+		TotalArgeTypes: argTypesLen,
+		Mapper:         *definition.Mapper,
+		IsTx:           definition.IsTx,
+		Args:           dynamicQuery.Args,
+		ArgsExp:        argsExp,
+		TotalArgs:      len(dynamicQuery.Args),
+		Comment:        statement.Comment,
+		WithContext:    withContext,
 	}); err != nil {
 		log.Printf("error: %v", err)
 	}

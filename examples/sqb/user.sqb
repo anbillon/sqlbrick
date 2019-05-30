@@ -25,6 +25,6 @@ INSERT INTO user(name, age) VALUES (${name}, ${age});
 DELETE FROM user WHERE id := ${id};
 {end define}
 
-{define name CountAll, mapper basicType}
+{define name CountAll, mapper int}
 SELECT COUNT (*) FROM "user";
 {end define}

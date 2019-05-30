@@ -129,20 +129,13 @@ var queryTypes = map[string]QueryType{
 	"SELECT": QueryTypeSelect,
 }
 
-type MapperType int8
+type DataType int8
 
 const (
-	MapperDefault MapperType = iota
-	MapperBasicType
-	MapperSingle
-	MapperArray
+	DataPrimitive DataType = iota
+	DataStruct
+	DataArray
 )
-
-var mappers = map[string]MapperType{
-	"basicType": MapperBasicType,
-	"single":    MapperSingle,
-	"array":     MapperArray,
-}
 
 type Syntax struct {
 	DbFieldName string
@@ -165,10 +158,16 @@ type DynamicQuery struct {
 	RemoveLastComma bool
 }
 
+type TypeDetail struct {
+	Name string
+	Type DataType
+}
+
 type Definition struct {
-	Name   string
-	Mapper MapperType
-	IsTx   bool
+	Name     string
+	ArgTypes []TypeDetail
+	Mapper   *TypeDetail
+	IsTx     bool
 }
 
 type Statement struct {
