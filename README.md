@@ -136,12 +136,13 @@ SQLBrick allows to import custom type so the mapper can use them:
 ### Definition
 SQLBrick uses `{define ...}...{end define}` to define a SQL function:
 ```sqb
-{define name SelectById, mapper int}
+{define name SelectById, paramType int string, mapper int}
 ....
 {end define}
 ```
-Definition has three parameters, `name`,  `mapper` and `tx`, they must be split by `,`. 
+Definition has three parameters, `name`,  `paramType`, `mapper` and `tx`, they must be split by `,`. 
 * The `name` is necessary to define the name of current SQL function.
+* The `paramType` is optional, it's used to define the parameter type for placeholders. The number of `paramType` must be the same of placeholders, and split by space.
 * The `mapper` is optional, default is `interface` which means the result will map to an array. If you want to map to only one result, then use `import` to import it, and use it as golang (for example: `entity.Book`). If you want to map to basic type, just use the type in golang (such as `int`, `string`, `float32`, `bool` and so on. ps: this should be based on your query result).
 * The `tx` is optional, default is `false`. If set `true`, the SQL function will work in a transaction. Consuming the generated code like this:
 ```go
