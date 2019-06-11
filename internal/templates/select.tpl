@@ -27,7 +27,7 @@ dest {{ if ne .Mapper.Name "interface{}" }}*{{ end }}{{ .Mapper.Name }}, {{ .Arg
         return err
     }
 
-    {{ if ge .TotalArgs 1 -}}
+    {{ if or (gt .TotalArgTypes 1) (and (eq .TotalArgTypes 1) (eq .TotalArgs 1)) -}}
     // create map arguments for sqlx
     args := map[string]interface{}{
     {{- range $k, $v := .Args }}

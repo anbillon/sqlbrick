@@ -97,7 +97,7 @@ func runGeneration(_ *cobra.Command, _ []string) error {
 		if err := bricksGen.Output("sqlbrick.go"); err != nil {
 			log.Fatalf("error: writing output: %s", err)
 		} else {
-			fmt.Printf("SQLBrick has wrote to: %s", outputDir)
+			fmt.Printf("SQLBrick has wrote to: %s\n", outputDir)
 		}
 	}
 

@@ -49,21 +49,21 @@ type Generator struct {
 
 // Type definition for sql functions used to generate sql func.
 type SqlFunc struct {
-	BrickName      string
-	FuncName       string
-	Segments       []string
-	Conditions     []Condition
-	RemoveComma    bool
-	IndexOfWhere   int
-	ArgTypes       []TypeDetail
-	TotalArgeTypes int
-	Mapper         TypeDetail
-	IsTx           bool
-	ArgsExp        string
-	Args           []string
-	TotalArgs      int
-	Comment        string
-	WithContext    bool
+	BrickName     string
+	FuncName      string
+	Segments      []string
+	Conditions    []Condition
+	RemoveComma   bool
+	IndexOfWhere  int
+	ArgTypes      []TypeDetail
+	TotalArgTypes int
+	Mapper        TypeDetail
+	IsTx          bool
+	ArgsExp       string
+	Args          []string
+	TotalArgs     int
+	Comment       string
+	WithContext   bool
 }
 
 // NewGenerator create a new Generator with output dir and package name.
@@ -224,21 +224,21 @@ func (g *Generator) GenerateSqlFunc(brickName string, withContext bool,
 	}
 
 	if err := g.applyTemplate(tpl, SqlFunc{
-		BrickName:      brickName,
-		FuncName:       definition.Name,
-		Segments:       dynamicQuery.Segments,
-		Conditions:     dynamicQuery.Conditions,
-		IndexOfWhere:   dynamicQuery.IndexOfWhere,
-		RemoveComma:    dynamicQuery.RemoveLastComma,
-		ArgTypes:       definition.ArgTypes,
-		TotalArgeTypes: argTypesLen,
-		Mapper:         *definition.Mapper,
-		IsTx:           definition.IsTx,
-		Args:           dynamicQuery.Args,
-		ArgsExp:        argsExp,
-		TotalArgs:      len(dynamicQuery.Args),
-		Comment:        statement.Comment,
-		WithContext:    withContext,
+		BrickName:     brickName,
+		FuncName:      definition.Name,
+		Segments:      dynamicQuery.Segments,
+		Conditions:    dynamicQuery.Conditions,
+		IndexOfWhere:  dynamicQuery.IndexOfWhere,
+		RemoveComma:   dynamicQuery.RemoveLastComma,
+		ArgTypes:      definition.ArgTypes,
+		TotalArgTypes: argTypesLen,
+		Mapper:        *definition.Mapper,
+		IsTx:          definition.IsTx,
+		Args:          dynamicQuery.Args,
+		ArgsExp:       argsExp,
+		TotalArgs:     len(dynamicQuery.Args),
+		Comment:       statement.Comment,
+		WithContext:   withContext,
 	}); err != nil {
 		log.Printf("error: %v", err)
 	}
